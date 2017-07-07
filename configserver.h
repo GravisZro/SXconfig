@@ -1,13 +1,9 @@
 #ifndef CONFIGSERVER_H
 #define CONFIGSERVER_H
 
+// PDTK
 #include <socket.h>
-#include <cxxutils/vfifo.h>
-#include <cxxutils/hashing.h>
-#include <cxxutils/configmanip.h>
-#include <cxxutils/syslogstream.h>
 #include <cxxutils/posix_helpers.h>
-
 
 class ConfigServer : public ServerSocket
 {

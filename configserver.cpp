@@ -1,5 +1,11 @@
 #include "configserver.h"
 
+// PDTK
+#include <cxxutils/vfifo.h>
+#include <cxxutils/hashing.h>
+#include <cxxutils/configmanip.h>
+#include <cxxutils/syslogstream.h>
+
 
 ConfigServer::ConfigServer(const char* const username, const char* const filename)
   : ServerSocket(EDomain::local, EType::seqpacket, EProtocol::unspec, 0)
