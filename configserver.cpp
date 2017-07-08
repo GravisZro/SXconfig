@@ -7,7 +7,7 @@
 #include <cxxutils/syslogstream.h>
 
 
-ConfigServer::ConfigServer(const char* const username, const char* const filename)
+ConfigServer::ConfigServer(const char* const username, const char* const filename) noexcept
   : ServerSocket(EDomain::local, EType::seqpacket, EProtocol::unspec, 0)
 {
   m_path.assign("/mc/").append(username).append("/").append(filename);
@@ -22,7 +22,7 @@ ConfigServer::ConfigServer(const char* const username, const char* const filenam
 }
 
 
-void ConfigServer::allowDeny(posix::fd_t fd, posix::sockaddr_t addr, proccred_t cred)
+void ConfigServer::allowDeny(posix::fd_t fd, posix::sockaddr_t addr, proccred_t cred) noexcept
 {
   (void)addr;
   auto endpoint = m_endpoints.find(cred.pid);
@@ -36,14 +36,14 @@ void ConfigServer::allowDeny(posix::fd_t fd, posix::sockaddr_t addr, proccred_t 
     rejectPeerRequest(fd);
 }
 
-void ConfigServer::removeEndpoint(posix::fd_t fd)
+void ConfigServer::removeEndpoint(posix::fd_t fd) noexcept
 {
   for(auto endpoint : m_endpoints)
     if(fd == endpoint.second)
     { m_endpoints.erase(endpoint.first); break; }
 }
 
-void ConfigServer::receive(posix::fd_t server, vfifo buffer, posix::fd_t fd)
+void ConfigServer::receive(posix::fd_t server, vfifo buffer, posix::fd_t fd) noexcept
 {
   (void)server;
   (void)fd;
