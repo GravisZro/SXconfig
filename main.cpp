@@ -1,5 +1,6 @@
 // PDTK
 #include <application.h>
+#include <object.h>
 #include <cxxutils/syslogstream.h>
 
 // project
@@ -11,6 +12,11 @@ constexpr const char* const username = "config";
 void exiting(void)
 {
   posix::syslog << posix::priority::notice << "daemon has exited." << posix::eom;
+}
+
+void allfunc(void)
+{
+  posix::syslog << "tada!" << posix::eom;
 }
 
 int main(int argc, char *argv[]) noexcept
@@ -28,6 +34,8 @@ int main(int argc, char *argv[]) noexcept
 
   Application app;
   ConfigServer server(username, "file_monitor");
+
+  Object::connect(server.getAllCall, allfunc);
 
   return app.exec();
 }
