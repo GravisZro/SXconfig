@@ -60,7 +60,8 @@ void ConfigServer::receive(posix::fd_t server, vfifo buffer, posix::fd_t fd)
         if(!buffer.hadError())
           Object::enqueue(setValueCall, val.key, val.value);
       }
-        break;
+      break;
+
       case "getValueCall"_hash:
       {
         struct { std::string key; } val;
@@ -68,6 +69,10 @@ void ConfigServer::receive(posix::fd_t server, vfifo buffer, posix::fd_t fd)
         if(!buffer.hadError())
           Object::enqueue(getValueCall, val.key);
       }
+      break;
+
+      case "getAllCall"_hash:
+        Object::enqueue(getAllCall);
         break;
     }
   }

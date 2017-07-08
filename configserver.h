@@ -10,11 +10,14 @@ class ConfigServer : public ServerSocket
 public:
   ConfigServer(const char* const username, const char* const filename);
 
+  bool configUpdated(const posix::fd_t client) { return incant(client, "configUpdated", posix::invalid_descriptor); }
   bool setValueReturn(const posix::fd_t client, const int errcode) { return incant(client, "setValueReturn", posix::invalid_descriptor, errcode); }
   bool getValueReturn(const posix::fd_t client, const std::string& value) { return incant(client, "getValueReturn", posix::invalid_descriptor, value); }
+  bool getAllReturn(const posix::fd_t client, const std::unordered_map<std::string, std::string>& values) { return incant(client, "getAllReturn", posix::invalid_descriptor, values); }
 
   signal<std::string, std::string> setValueCall;
   signal<std::string> getValueCall;
+  signal<> getAllCall;
 
 private:
   void allowDeny(posix::fd_t fd, posix::sockaddr_t addr, proccred_t cred);
