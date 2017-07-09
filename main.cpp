@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) noexcept
   (void)argc;
   (void)argv;
   ::atexit(exiting);
+  ::signal(SIGPIPE, SIG_IGN);
 
   posix::syslog.open(appname, posix::facility::daemon);
   if(posix::getusername(::getuid()) != username)
