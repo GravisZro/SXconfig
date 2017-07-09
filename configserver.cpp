@@ -8,7 +8,7 @@
 
 
 ConfigServer::ConfigServer(const char* const username, const char* const filename) noexcept
-  : ServerSocket(EDomain::local, EType::seqpacket, EProtocol::unspec, 0)
+//  : ServerSocket(EDomain::local, EType::stream, EProtocol::unspec, 0)
 {
   m_path.assign("/mc/").append(username).append("/").append(filename);
   if(bind(m_path.c_str()))
@@ -29,7 +29,7 @@ void ConfigServer::allowDeny(posix::fd_t fd, posix::sockaddr_t addr, proccred_t 
   if(endpoint == m_endpoints.end() ||           // if no connection exists OR
      !ServerSocket::peerData(endpoint->second)) // if old connection is mysteriously gone
   {
-    m_endpoints.at(cred.pid) = fd; // insert or assign new value
+    m_endpoints[cred.pid] = fd; // insert or assign new value
     acceptPeerRequest(fd);
   }
   else // reject multiple connections from one endpoint
