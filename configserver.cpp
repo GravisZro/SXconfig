@@ -22,30 +22,29 @@ ConfigServer::ConfigServer(const char* const username, const char* const filenam
 }
 
 
-void ConfigServer::allowDeny(posix::fd_t fd, posix::sockaddr_t addr, proccred_t cred) noexcept
+void ConfigServer::allowDeny(posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept
 {
   (void)addr;
   auto endpoint = m_endpoints.find(cred.pid);
   if(endpoint == m_endpoints.end() ||           // if no connection exists OR
      !ServerSocket::peerData(endpoint->second)) // if old connection is mysteriously gone
   {
-    m_endpoints[cred.pid] = fd; // insert or assign new value
-    acceptPeerRequest(fd);
+    m_endpoints[cred.pid] = socket; // insert or assign new value
+    acceptPeerRequest(socket);
   }
   else // reject multiple connections from one endpoint
-    rejectPeerRequest(fd);
+    rejectPeerRequest(socket);
 }
 
-void ConfigServer::removeEndpoint(posix::fd_t fd) noexcept
+void ConfigServer::removeEndpoint(posix::fd_t socket) noexcept
 {
   for(auto endpoint : m_endpoints)
-    if(fd == endpoint.second)
+    if(socket == endpoint.second)
     { m_endpoints.erase(endpoint.first); break; }
 }
 
-void ConfigServer::receive(posix::fd_t server, vfifo buffer, posix::fd_t fd) noexcept
+void ConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept
 {
-  (void)server;
   (void)fd;
   std::string str;
   if(!(buffer >> str).hadError() && str == "RPC")
@@ -58,7 +57,7 @@ void ConfigServer::receive(posix::fd_t server, vfifo buffer, posix::fd_t fd) noe
         struct { std::string key; std::string value; } val;
         buffer >> val.key >> val.value;
         if(!buffer.hadError())
-          Object::enqueue(setValueCall, val.key, val.value);
+          Object::enqueue(setValueCall, socket, val.key, val.value);
       }
       break;
 
@@ -67,12 +66,12 @@ void ConfigServer::receive(posix::fd_t server, vfifo buffer, posix::fd_t fd) noe
         struct { std::string key; } val;
         buffer >> val.key;
         if(!buffer.hadError())
-          Object::enqueue(getValueCall, val.key);
+          Object::enqueue(getValueCall, socket, val.key);
       }
       break;
 
       case "getAllCall"_hash:
-        Object::enqueue(getAllCall);
+        Object::enqueue(getAllCall, socket);
         break;
     }
   }

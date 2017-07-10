@@ -14,7 +14,7 @@ void exiting(void)
   posix::syslog << posix::priority::notice << "daemon has exited." << posix::eom;
 }
 
-void allfunc(void)
+void allfunc(posix::fd_t socket)
 {
   posix::syslog << "tada!" << posix::eom;
 }
