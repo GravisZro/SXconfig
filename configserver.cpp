@@ -8,7 +8,6 @@
 
 
 ConfigServer::ConfigServer(const char* const username, const char* const filename) noexcept
-//  : ServerSocket(EDomain::local, EType::stream, EProtocol::unspec, 0)
 {
   m_path.assign("/mc/").append(username).append("/").append(filename);
   if(bind(m_path.c_str()))
