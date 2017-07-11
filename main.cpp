@@ -14,10 +14,6 @@ void exiting(void)
   posix::syslog << posix::priority::notice << "daemon has exited." << posix::eom;
 }
 
-void allfunc(posix::fd_t socket)
-{
-  posix::syslog << "tada!" << posix::eom;
-}
 
 int main(int argc, char *argv[]) noexcept
 {
@@ -27,7 +23,7 @@ int main(int argc, char *argv[]) noexcept
   ::signal(SIGPIPE, SIG_IGN);
 
   posix::syslog.open(appname, posix::facility::daemon);
-  if(posix::getusername(::getuid()) != username)
+  if(std::strcmp(posix::getusername(::getuid()), username))
   {
     posix::syslog << posix::priority::critical << "daemon must be launched as username " << '"' << username << '"' << posix::eom;
     ::exit(-1);
@@ -35,8 +31,6 @@ int main(int argc, char *argv[]) noexcept
 
   Application app;
   ConfigServer server(username, "file_monitor");
-
-  Object::connect(server.getAllCall, allfunc);
 
   return app.exec();
 }
