@@ -91,24 +91,51 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
 
 void ConfigServer::set(posix::fd_t socket, std::string key, std::string value) noexcept
 {
+  auto configfile = m_configfiles.find(socket);
+  assert(configfile != m_configfiles.end());
   int errcode = posix::success_response;
 
+  configfile->second.data.getNode(key)->value = value;
 
   setReturn(socket, errcode);
 }
 
+void ConfigServer::unset(posix::fd_t socket, std::string key) noexcept
+{
+  auto configfile = m_configfiles.find(socket);
+  assert(configfile != m_configfiles.end());
+  int errcode = posix::success_response;
+
+  posix::size_t offset = key.find_last_of('/');
+  auto node = configfile->second.data.findNode(key.substr(0, offset)); // look for parent node
+  if(node == nullptr)
+    errcode = posix::error_response;
+  else
+    node->values.erase(key.substr(offset + 1)); // erase child node if it exists
+
+  setReturn(socket, errcode);
+}
+
+
 void ConfigServer::get(posix::fd_t socket, std::string key) noexcept
 {
+  auto configfile = m_configfiles.find(socket);
+  assert(configfile != m_configfiles.end());
   std::string value;
 
-
+  auto node = configfile->second.data.findNode(key);
+  if(node != nullptr)
+    value = node->value;
   getReturn(socket, value);
 }
 
 void ConfigServer::getAll(posix::fd_t socket) noexcept
 {
+  auto configfile = m_configfiles.find(socket);
+  assert(configfile != m_configfiles.end());
   std::unordered_map<std::string, std::string> values;
 
+  // this is going to be complicated. <_<;
 
   getAllReturn(socket, values);
 }
@@ -116,11 +143,10 @@ void ConfigServer::getAll(posix::fd_t socket) noexcept
 void ConfigServer::removePeer(posix::fd_t socket) noexcept
 {
   auto configfile = m_configfiles.find(socket);
-  if(configfile != m_configfiles.end())
-  {
-    Object::disconnect(configfile->second.fd);
-    m_configfiles.erase(configfile);
-  }
+  assert(configfile != m_configfiles.end());
+
+  Object::disconnect(configfile->second.fd);
+  m_configfiles.erase(configfile);
 
   for(auto endpoint : m_endpoints)
     if(socket == endpoint.second)
