@@ -6,54 +6,6 @@
 // PDTK
 #include <cxxutils/syslogstream.h>
 
-ConfigServerInterface::ConfigServerInterface(void) noexcept
-{
-  Object::connect(newPeerRequest, this, &ConfigServerInterface::request);
-  Object::connect(newPeerMessage, this, &ConfigServerInterface::receive);
-}
-
-void ConfigServerInterface::request(posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept
-{
-  (void)addr;
-  if(peerChooser(socket, cred))
-    acceptPeerRequest(socket);
-  else
-    rejectPeerRequest(socket);
-}
-
-void ConfigServerInterface::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept
-{
-  (void)fd;
-  std::string str;
-  if(!(buffer >> str).hadError() && str == "RPC")
-  {
-    buffer >> str;
-    switch(hash(str))
-    {
-      case "setCall"_hash:
-      {
-        struct { std::string key; std::string value; } val;
-        buffer >> val.key >> val.value;
-        if(!buffer.hadError())
-          Object::enqueue(setCall, socket, val.key, val.value);
-      }
-      break;
-      case "getCall"_hash:
-      {
-        struct { std::string key; } val;
-        buffer >> val.key;
-        if(!buffer.hadError())
-          Object::enqueue(getCall, socket, val.key);
-      }
-      break;
-      case "getAllCall"_hash:
-      {
-        Object::enqueue(getAllCall, socket);
-      }
-      break;
-    }
-  }
-}
 
 ConfigServer::ConfigServer(const char* const username, const char* const filename) noexcept
 {
@@ -63,7 +15,50 @@ ConfigServer::ConfigServer(const char* const username, const char* const filenam
   else
     posix::syslog << posix::priority::error << "unable to bind daemon to " << m_path << posix::eom;
 
+  Object::connect(newPeerRequest  , this, &ConfigServer::request);
+  Object::connect(newPeerMessage  , this, &ConfigServer::receive);
   Object::connect(disconnectedPeer, this, &ConfigServer::removePeer);
+}
+
+void ConfigServer::setCall(posix::fd_t socket, std::string& key, std::string& value) noexcept
+{
+  auto configfile = m_configfiles.find(socket);
+  assert(configfile != m_configfiles.end());
+  int errcode = posix::success_response;
+
+  configfile->second.data.getNode(key)->value = value;
+  setReturn(socket, errcode);
+}
+
+void ConfigServer::getCall(posix::fd_t socket, std::string& key) noexcept
+{
+  auto configfile = m_configfiles.find(socket);
+  assert(configfile != m_configfiles.end());
+  std::string value;
+  int errcode = posix::success_response;
+
+  auto node = configfile->second.data.findNode(key);
+  if(node == nullptr)
+    errcode = posix::error(std::errc::invalid_argument);
+  else
+    value = node->value;
+  getReturn(socket, errcode, value);
+}
+
+void ConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
+{
+  auto configfile = m_configfiles.find(socket);
+  assert(configfile != m_configfiles.end());
+  int errcode = posix::success_response;
+
+  posix::size_t offset = key.find_last_of('/');
+  auto node = configfile->second.data.findNode(key.substr(0, offset)); // look for parent node
+  if(node == nullptr)
+    errcode = posix::error_response;
+  else
+    node->values.erase(key.substr(offset + 1)); // erase child node if it exists
+
+  unsetReturn(socket, errcode);
 }
 
 bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept
@@ -89,57 +84,6 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
   return false; // reject multiple connections from one endpoint
 }
 
-void ConfigServer::set(posix::fd_t socket, std::string key, std::string value) noexcept
-{
-  auto configfile = m_configfiles.find(socket);
-  assert(configfile != m_configfiles.end());
-  int errcode = posix::success_response;
-
-  configfile->second.data.getNode(key)->value = value;
-
-  setReturn(socket, errcode);
-}
-
-void ConfigServer::unset(posix::fd_t socket, std::string key) noexcept
-{
-  auto configfile = m_configfiles.find(socket);
-  assert(configfile != m_configfiles.end());
-  int errcode = posix::success_response;
-
-  posix::size_t offset = key.find_last_of('/');
-  auto node = configfile->second.data.findNode(key.substr(0, offset)); // look for parent node
-  if(node == nullptr)
-    errcode = posix::error_response;
-  else
-    node->values.erase(key.substr(offset + 1)); // erase child node if it exists
-
-  setReturn(socket, errcode);
-}
-
-
-void ConfigServer::get(posix::fd_t socket, std::string key) noexcept
-{
-  auto configfile = m_configfiles.find(socket);
-  assert(configfile != m_configfiles.end());
-  std::string value;
-
-  auto node = configfile->second.data.findNode(key);
-  if(node != nullptr)
-    value = node->value;
-  getReturn(socket, value);
-}
-
-void ConfigServer::getAll(posix::fd_t socket) noexcept
-{
-  auto configfile = m_configfiles.find(socket);
-  assert(configfile != m_configfiles.end());
-  std::unordered_map<std::string, std::string> values;
-
-  // this is going to be complicated. <_<;
-
-  getAllReturn(socket, values);
-}
-
 void ConfigServer::removePeer(posix::fd_t socket) noexcept
 {
   auto configfile = m_configfiles.find(socket);
@@ -151,4 +95,52 @@ void ConfigServer::removePeer(posix::fd_t socket) noexcept
   for(auto endpoint : m_endpoints)
     if(socket == endpoint.second)
     { m_endpoints.erase(endpoint.first); break; }
+}
+
+// GENERATED CODE BELOW
+
+void ConfigServer::request(posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept
+{
+  (void)addr;
+  if(peerChooser(socket, cred))
+    acceptPeerRequest(socket);
+  else
+    rejectPeerRequest(socket);
+}
+
+void ConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept
+{
+  (void)fd;
+  std::string str;
+  if(!(buffer >> str).hadError() && str == "RPC")
+  {
+    buffer >> str;
+    switch(hash(str))
+    {
+      case "setCall"_hash:
+      {
+        struct { std::string key; std::string value; } val;
+        buffer >> val.key >> val.value;
+        if(!buffer.hadError())
+          setCall(socket, val.key, val.value);
+      }
+      break;
+      case "getCall"_hash:
+      {
+        struct { std::string key; } val;
+        buffer >> val.key;
+        if(!buffer.hadError())
+          getCall(socket, val.key);
+      }
+      break;
+      case "unsetCall"_hash:
+      {
+        struct { std::string key; } val;
+        buffer >> val.key;
+        if(!buffer.hadError())
+          unsetCall(socket, val.key);
+      }
+      break;
+    }
+  }
 }
