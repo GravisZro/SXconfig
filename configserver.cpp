@@ -1,19 +1,25 @@
 #include "configserver.h"
 
+// C++
+#include <cstdio>
+
 // POSIX
 #include <limits.h>
+#include <fcntl.h>
 
 // PDTK
 #include <cxxutils/syslogstream.h>
+#include <specialized/procstat.h>
 
 
-ConfigServer::ConfigServer(const char* const username, const char* const filename) noexcept
+ConfigServer::ConfigServer(const char* const filename) noexcept
 {
-  m_path.assign("/mc/").append(username).append("/").append(filename);
-  if(bind(m_path.c_str()))
-    posix::syslog << posix::priority::info << "daemon bound to " << m_path << posix::eom;
+  char path[PATH_MAX] = { 0 };
+  std::snprintf(path, PATH_MAX, "/mc/config/%s", filename);
+  if(bind(path))
+    posix::syslog << posix::priority::info << "daemon bound to " << path << posix::eom;
   else
-    posix::syslog << posix::priority::error << "unable to bind daemon to " << m_path << posix::eom;
+    posix::syslog << posix::priority::error << "unable to bind daemon to " << path << posix::eom;
 
   Object::connect(newPeerRequest  , this, &ConfigServer::request);
   Object::connect(newPeerMessage  , this, &ConfigServer::receive);
@@ -26,7 +32,7 @@ void ConfigServer::setCall(posix::fd_t socket, std::string& key, std::string& va
   assert(configfile != m_configfiles.end());
   int errcode = posix::success_response;
 
-  configfile->second.data.getNode(key)->value = value;
+  configfile->second.config.getNode(key)->value = value;
   setReturn(socket, errcode);
 }
 
@@ -37,7 +43,7 @@ void ConfigServer::getCall(posix::fd_t socket, std::string& key) noexcept
   std::string value;
   int errcode = posix::success_response;
 
-  auto node = configfile->second.data.findNode(key);
+  auto node = configfile->second.config.findNode(key);
   if(node == nullptr)
     errcode = posix::error(std::errc::invalid_argument);
   else
@@ -52,7 +58,7 @@ void ConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
   int errcode = posix::success_response;
 
   posix::size_t offset = key.find_last_of('/');
-  auto node = configfile->second.data.findNode(key.substr(0, offset)); // look for parent node
+  auto node = configfile->second.config.findNode(key.substr(0, offset)); // look for parent node
   if(node == nullptr)
     errcode = posix::error_response;
   else
@@ -63,20 +69,44 @@ void ConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
 
 bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept
 {
+  if(!posix::useringroup("config", posix::getusername(cred.uid)))
+    return false;
+
+  process_state_t state;
+  if(::procstat(cred.pid, &state) == posix::error_response) // get state information about the connecting process
+    return false; // unable to get state
+
   auto endpoint = m_endpoints.find(cred.pid);
   if(endpoint == m_endpoints.end() || // if no connection exists OR
      !peerData(endpoint->second))     // if old connection is mysteriously gone (can this happen?)
   {
-    // construct config file name
-    char filename[PATH_MAX] = {0};
-    const char* username = posix::getusername(cred.uid);
+    // construct config filename
+    char path[PATH_MAX] = { 0 };
 
-    if(username == nullptr) // if UID was invalid
-      return false;
-    if(snprintf(filename, PATH_MAX, "/etc/sxconfig/%s.conf", username) == posix::error_response) // I don't how this could fail
-      return false;
+    if(snprintf(path, PATH_MAX, "/etc/sxconfig/%s.conf", state.name.c_str()) == posix::error_response) // I don't how this could fail
+      return false; // unable to build config filename
 
-    // read and watch config file
+    ::chown(path, ::getuid(), ::getgid());
+
+    std::string buffer;
+    std::FILE* file = std::fopen(path, "rb");
+
+    if(file == nullptr)
+    {
+      posix::syslog << "unable to open file: " << path << " : " << ::strerror(errno) << posix::eom;
+      return false;
+    }
+
+    buffer.resize(std::ftell(file), '\n');
+    if(buffer.size())
+    {
+      std::rewind(file);
+      std::fread(const_cast<char*>(buffer.data()), sizeof(std::string::value_type), buffer.size(), file);
+    }
+    std::fclose(file);
+    ::chown(path, cred.uid, ::getegid());
+
+    m_configfiles[socket].config.write(buffer);
 
     m_endpoints[cred.pid] = socket; // insert or assign new value
     return true;
@@ -97,8 +127,6 @@ void ConfigServer::removePeer(posix::fd_t socket) noexcept
     { m_endpoints.erase(endpoint.first); break; }
 }
 
-// GENERATED CODE BELOW
-
 void ConfigServer::request(posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept
 {
   (void)addr;
@@ -111,36 +139,27 @@ void ConfigServer::request(posix::fd_t socket, posix::sockaddr_t addr, proccred_
 void ConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept
 {
   (void)fd;
-  std::string str;
-  if(!(buffer >> str).hadError() && str == "RPC")
+  std::string key, value;
+  if(!(buffer >> value).hadError() && value == "RPC")
   {
-    buffer >> str;
-    switch(hash(str))
+    buffer >> value;
+    switch(hash(value))
     {
       case "setCall"_hash:
-      {
-        struct { std::string key; std::string value; } val;
-        buffer >> val.key >> val.value;
+        buffer >> key >> value;
         if(!buffer.hadError())
-          setCall(socket, val.key, val.value);
-      }
-      break;
+          setCall(socket, key, value);
+        break;
       case "getCall"_hash:
-      {
-        struct { std::string key; } val;
-        buffer >> val.key;
+        buffer >> key;
         if(!buffer.hadError())
-          getCall(socket, val.key);
-      }
-      break;
+          getCall(socket, key);
+        break;
       case "unsetCall"_hash:
-      {
-        struct { std::string key; } val;
-        buffer >> val.key;
+        buffer >> key;
         if(!buffer.hadError())
-          unsetCall(socket, val.key);
-      }
-      break;
+          unsetCall(socket, key);
+        break;
     }
   }
 }

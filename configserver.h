@@ -18,7 +18,7 @@
 class ConfigServer : public ServerSocket
 {
 public:
-  ConfigServer(const char* const username, const char* const filename) noexcept;
+  ConfigServer(const char* const filename) noexcept;
 
 private:
   bool configUpdated(const posix::fd_t socket                                             ) const noexcept { return write(socket, vfifo("RPC", "configUpdated"              ), posix::invalid_descriptor); }
@@ -39,11 +39,10 @@ private:
   struct configfile_t
   {
     posix::fd_t fd; // watches for changes
-    ConfigManip data;
+    ConfigManip config;
   };
   std::unordered_map<pid_t, posix::fd_t> m_endpoints;
   std::unordered_map<posix::fd_t, configfile_t> m_configfiles;
-  std::string m_path;
 };
 
 #endif // CONFIGSERVER_H
