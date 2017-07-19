@@ -43,14 +43,16 @@ QMAKE_CXXFLAGS += -isystem /usr/include/c++/v1/
 INCLUDEPATH += ../pdtk
 
 SOURCES = main.cpp \
+    configserver.cpp \
     ../pdtk/application.cpp \
     ../pdtk/socket.cpp \
     ../pdtk/cxxutils/configmanip.cpp\
     ../pdtk/specialized/eventbackend.cpp \
     ../pdtk/specialized/peercred.cpp \
-    configserver.cpp
+    ../pdtk/specialized/procstat.cpp
 
 HEADERS = \
+    configserver.h \
     ../pdtk/application.h \
     ../pdtk/object.h \
     ../pdtk/socket.h \
@@ -62,4 +64,4 @@ HEADERS = \
     ../pdtk/specialized/eventbackend.h \
     ../pdtk/specialized/peercred.h \
     ../pdtk/cxxutils/syslogstream.h \
-    configserver.h
+    ../pdtk/specialized/procstat.h
