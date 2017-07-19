@@ -1,3 +1,7 @@
+// POSIX++
+#include <cstdlib>
+#include <csignal>
+
 // PDTK
 #include <application.h>
 #include <object.h>
@@ -15,13 +19,12 @@ void exiting(void)
   posix::syslog << posix::priority::notice << "daemon has exited." << posix::eom;
 }
 
-#include <iostream>
 int main(int argc, char *argv[]) noexcept
 {
   (void)argc;
   (void)argv;
-  ::atexit(exiting);
-  ::signal(SIGPIPE, SIG_IGN);
+  std::atexit(exiting);
+  std::signal(SIGPIPE, SIG_IGN);
 
   posix::syslog.open(appname, posix::facility::daemon);
 
@@ -35,40 +38,10 @@ int main(int argc, char *argv[]) noexcept
                   << '"' << username << '"'
                   << " or have permissions to setuid/setgid"
                   << posix::eom;
-    ::exit(-1);
+    std::exit(-1);
   }
   Application app;
   ConfigServer server("file_monitor");
 
   return app.exec();
 }
-
-#if 0
-// STL
-#include <iostream>
-
-// C++
-#include <cassert>
-
-// PDTK
-#include <cxxutils/configmanip.h>
-
-int main(int argc, char *argv[]) noexcept
-{
-  std::string data = "[config]\nkey=original value\n # ORLY?\nKey = Value; yeah rly\n/config/key=\"overwritten\"; stuff\n[config]key=\"oh my\"\n";
-  ConfigManip conf;
-  assert(conf.read(data));
-
-  std::string dout;
-  assert(conf.write(dout));
-  std::cout << "OUTPUT" << std::endl << '"' << dout << '"' << std::endl;
-  //return 0;
-
-  auto node = conf.findNode("/config/1/key");
-  if(node != nullptr)
-    std::cout << "node: " << '"' << node->value << '"' << std::endl;
-  else
-    std::cout << "not found!" << std::endl;
-  return 0;
-}
-#endif

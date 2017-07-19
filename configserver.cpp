@@ -1,11 +1,11 @@
 #include "configserver.h"
 
-// C++
-#include <cstdio>
-
 // POSIX
-#include <limits.h>
 #include <fcntl.h>
+
+// POSIX++
+#include <cstdio>
+#include <climits>
 
 // PDTK
 #include <cxxutils/syslogstream.h>
@@ -93,7 +93,7 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
 
     if(file == nullptr)
     {
-      posix::syslog << "unable to open file: " << path << " : " << ::strerror(errno) << posix::eom;
+      posix::syslog << "unable to open file: " << path << " : " << std::strerror(errno) << posix::eom;
       return false;
     }
 
