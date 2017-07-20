@@ -18,7 +18,7 @@
 class ConfigServer : public ServerSocket
 {
 public:
-  ConfigServer(const char* const filename) noexcept;
+  ConfigServer(void) noexcept;
 
 private:
   bool configUpdated(const posix::fd_t socket                                             ) const noexcept { return write(socket, vfifo("RPC", "configUpdated"              ), posix::invalid_descriptor); }

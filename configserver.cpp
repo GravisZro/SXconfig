@@ -12,15 +12,8 @@
 #include <specialized/procstat.h>
 
 
-ConfigServer::ConfigServer(const char* const filename) noexcept
+ConfigServer::ConfigServer(void) noexcept
 {
-  char path[PATH_MAX] = { 0 };
-  std::snprintf(path, PATH_MAX, "/mc/config/%s", filename);
-  if(bind(path))
-    posix::syslog << posix::priority::info << "daemon bound to " << path << posix::eom;
-  else
-    posix::syslog << posix::priority::error << "unable to bind daemon to " << path << posix::eom;
-
   Object::connect(newPeerRequest  , this, &ConfigServer::request);
   Object::connect(newPeerMessage  , this, &ConfigServer::receive);
   Object::connect(disconnectedPeer, this, &ConfigServer::removePeer);
@@ -81,19 +74,17 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
      !peerData(endpoint->second))     // if old connection is mysteriously gone (can this happen?)
   {
     // construct config filename
-    char path[PATH_MAX] = { 0 };
+    char name[NAME_MAX] = { 0 };
 
-    if(snprintf(path, PATH_MAX, "/etc/sxconfig/%s.conf", state.name.c_str()) == posix::error_response) // I don't how this could fail
+    if(snprintf(name, PATH_MAX, "/etc/sxconfig/%s.conf", state.name.c_str()) == posix::error_response) // I don't how this could fail
       return false; // unable to build config filename
 
-    ::chown(path, ::getuid(), ::getgid());
-
     std::string buffer;
-    std::FILE* file = std::fopen(path, "rb");
+    std::FILE* file = std::fopen(name, "a+b");
 
     if(file == nullptr)
     {
-      posix::syslog << "unable to open file: " << path << " : " << std::strerror(errno) << posix::eom;
+      posix::syslog << "unable to open file: " << name << " : " << std::strerror(errno) << posix::eom;
       return false;
     }
 
@@ -104,8 +95,11 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
       std::fread(const_cast<char*>(buffer.data()), sizeof(std::string::value_type), buffer.size(), file);
     }
     std::fclose(file);
-    ::chown(path, cred.uid, ::getegid());
 
+    posix::chown(name, ::getuid(), cred.gid); // reset ownership
+    posix::chmod(name, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP); // reset permissions
+
+    m_configfiles[socket].fd = EventBackend::watch(name, EventFlags::FileMod);
     m_configfiles[socket].config.write(buffer);
 
     m_endpoints[cred.pid] = socket; // insert or assign new value
