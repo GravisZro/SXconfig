@@ -49,7 +49,8 @@ SOURCES = main.cpp \
     ../pdtk/cxxutils/configmanip.cpp\
     ../pdtk/specialized/eventbackend.cpp \
     ../pdtk/specialized/peercred.cpp \
-    ../pdtk/specialized/procstat.cpp
+    ../pdtk/specialized/procstat.cpp \
+    executorserver.cpp
 
 HEADERS = \
     configserver.h \
@@ -64,4 +65,5 @@ HEADERS = \
     ../pdtk/specialized/eventbackend.h \
     ../pdtk/specialized/peercred.h \
     ../pdtk/cxxutils/syslogstream.h \
-    ../pdtk/specialized/procstat.h
+    ../pdtk/specialized/procstat.h \
+    executorserver.h

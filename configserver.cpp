@@ -6,11 +6,13 @@
 // POSIX++
 #include <cstdio>
 #include <climits>
+#include <cassert>
 
 // PDTK
 #include <cxxutils/syslogstream.h>
 #include <specialized/procstat.h>
 
+#define FILENAME_PATTERN "/etc/sxconfig/%s.conf"
 
 ConfigServer::ConfigServer(void) noexcept
 {
@@ -76,7 +78,7 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
     // construct config filename
     char name[NAME_MAX] = { 0 };
 
-    if(snprintf(name, PATH_MAX, "/etc/sxconfig/%s.conf", state.name.c_str()) == posix::error_response) // I don't how this could fail
+    if(snprintf(name, PATH_MAX, FILENAME_PATTERN, state.name.c_str()) == posix::error_response) // I don't how this could fail
       return false; // unable to build config filename
 
     std::string buffer;

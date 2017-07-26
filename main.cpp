@@ -1,3 +1,6 @@
+// POSIX
+#include <unistd.h>
+
 // POSIX++
 #include <cstdlib>
 #include <csignal>
@@ -9,11 +12,13 @@
 
 // project
 #include "configserver.h"
+#include "executorserver.h"
 
 constexpr const char* const appname = "SXconfigd";
 constexpr const char* const username  = "config";
 constexpr const char* const groupname = "config";
-constexpr const char* const socket_path = "/mc/config/file_monitor";
+constexpr const char* const configs_socket_path = "/mc/config/configs";
+constexpr const char* const executor_socket_path = "/mc/config/executor";
 
 void exiting(void)
 {
@@ -43,12 +48,19 @@ int main(int argc, char *argv[]) noexcept
   }
 
   Application app;
-  ConfigServer server;
+  ConfigServer config_server;
+  ExecutorServer executor_server;
 
-  if(server.bind(socket_path))
-    posix::syslog << posix::priority::info << "daemon bound to " << socket_path << posix::eom;
+  if(config_server.bind(configs_socket_path))
+    posix::syslog << posix::priority::info << "daemon bound to " << configs_socket_path << posix::eom;
   else
-    posix::syslog << posix::priority::error << "unable to bind daemon to " << socket_path << posix::eom;
+    posix::syslog << posix::priority::error << "unable to bind daemon to " << configs_socket_path << posix::eom;
+
+
+  if(executor_server.bind(executor_socket_path))
+    posix::syslog << posix::priority::info << "daemon bound to " << executor_socket_path << posix::eom;
+  else
+    posix::syslog << posix::priority::error << "unable to bind daemon to " << executor_socket_path << posix::eom;
 
   return app.exec();
 }

@@ -1,5 +1,5 @@
-#ifndef CONFIGSERVER_H
-#define CONFIGSERVER_H
+#ifndef EXECUTORSERVER_H
+#define EXECUTORSERVER_H
 
 // PDTK
 #include <socket.h>
@@ -9,19 +9,19 @@
 #include <cxxutils/configmanip.h>
 
 /*
-  server out   void configUpdated(void);
+  server out   void configUpdated(std::string name);
   server inout {int errcode} unset(std::string key);
   server inout {int errcode} set(std::string key, std::string value);
   server inout {int errcode, std::string value} get(std::string key);
 */
 
-class ConfigServer : public ServerSocket
+class ExecutorServer : public ServerSocket
 {
 public:
-  ConfigServer(void) noexcept;
+  ExecutorServer(void) noexcept;
 
 private:
-  bool configUpdated(const posix::fd_t socket                                             ) const noexcept { return write(socket, vfifo("RPC", "configUpdated"              ), posix::invalid_descriptor); }
+  bool configUpdated(const posix::fd_t socket, const std::string& name                    ) const noexcept { return write(socket, vfifo("RPC", "configUpdated", name        ), posix::invalid_descriptor); }
   bool unsetReturn  (const posix::fd_t socket, const int errcode                          ) const noexcept { return write(socket, vfifo("RPC", "unsetReturn", errcode       ), posix::invalid_descriptor); }
   bool setReturn    (const posix::fd_t socket, const int errcode                          ) const noexcept { return write(socket, vfifo("RPC", "setReturn"  , errcode       ), posix::invalid_descriptor); }
   bool getReturn    (const posix::fd_t socket, const int errcode, const std::string& value) const noexcept { return write(socket, vfifo("RPC", "getReturn"  , errcode, value), posix::invalid_descriptor); }
@@ -35,6 +35,7 @@ private:
   void request(posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept;
 
   void removePeer(posix::fd_t socket) noexcept;
+  bool readconfig(const char* daemon);
 
   struct configfile_t
   {
@@ -42,7 +43,7 @@ private:
     ConfigManip config;
   };
   std::unordered_map<pid_t, posix::fd_t> m_endpoints;
-  std::unordered_map<posix::fd_t, configfile_t> m_configfiles;
+  std::unordered_map<std::string, configfile_t> m_configfiles;
 };
 
-#endif // CONFIGSERVER_H
+#endif // EXECUTORSERVER_H
