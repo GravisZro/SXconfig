@@ -44,16 +44,17 @@ INCLUDEPATH += ../pdtk
 
 SOURCES = main.cpp \
     configserver.cpp \
+    executorconfigserver.cpp \
     ../pdtk/application.cpp \
     ../pdtk/socket.cpp \
     ../pdtk/cxxutils/configmanip.cpp\
     ../pdtk/specialized/eventbackend.cpp \
     ../pdtk/specialized/peercred.cpp \
-    ../pdtk/specialized/procstat.cpp \
-    executorserver.cpp
+    ../pdtk/specialized/procstat.cpp
 
 HEADERS = \
     configserver.h \
+    executorconfigserver.h \
     ../pdtk/application.h \
     ../pdtk/object.h \
     ../pdtk/socket.h \
@@ -65,5 +66,4 @@ HEADERS = \
     ../pdtk/specialized/eventbackend.h \
     ../pdtk/specialized/peercred.h \
     ../pdtk/cxxutils/syslogstream.h \
-    ../pdtk/specialized/procstat.h \
-    executorserver.h
+    ../pdtk/specialized/procstat.h

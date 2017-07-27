@@ -12,7 +12,7 @@
 
 // project
 #include "configserver.h"
-#include "executorserver.h"
+#include "executorconfigserver.h"
 
 constexpr const char* const appname = "SXconfigd";
 constexpr const char* const username  = "config";
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) noexcept
 
   Application app;
   ConfigServer config_server;
-  ExecutorServer executor_server;
+  ExecutorConfigServer executor_server;
 
   if(config_server.bind(configs_socket_path))
     posix::syslog << posix::priority::info << "daemon bound to " << configs_socket_path << posix::eom;

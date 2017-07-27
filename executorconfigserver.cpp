@@ -1,4 +1,4 @@
-#include "executorserver.h"
+#include "executorconfigserver.h"
 
 // POSIX
 #include <fcntl.h>
@@ -14,14 +14,14 @@
 #define FILENAME_PATTERN "/etc/sxexecutor/%s.conf"
 #define REQUIRED_USERNAME "executor"
 
-ExecutorServer::ExecutorServer(void) noexcept
+ExecutorConfigServer::ExecutorConfigServer(void) noexcept
 {
-  Object::connect(newPeerRequest  , this, &ExecutorServer::request);
-  Object::connect(newPeerMessage  , this, &ExecutorServer::receive);
-  Object::connect(disconnectedPeer, this, &ExecutorServer::removePeer);
+  Object::connect(newPeerRequest  , this, &ExecutorConfigServer::request);
+  Object::connect(newPeerMessage  , this, &ExecutorConfigServer::receive);
+  Object::connect(disconnectedPeer, this, &ExecutorConfigServer::removePeer);
 }
 
-void ExecutorServer::setCall(posix::fd_t socket, std::string& key, std::string& value) noexcept
+void ExecutorConfigServer::setCall(posix::fd_t socket, std::string& key, std::string& value) noexcept
 {
   int errcode = posix::success_response;
   std::string::size_type slashpos = key.find('/');
@@ -40,7 +40,7 @@ void ExecutorServer::setCall(posix::fd_t socket, std::string& key, std::string& 
   setReturn(socket, errcode);
 }
 
-void ExecutorServer::getCall(posix::fd_t socket, std::string& key) noexcept
+void ExecutorConfigServer::getCall(posix::fd_t socket, std::string& key) noexcept
 {
   std::string value;
   int errcode = posix::success_response;
@@ -66,7 +66,7 @@ void ExecutorServer::getCall(posix::fd_t socket, std::string& key) noexcept
   getReturn(socket, errcode, value);
 }
 
-void ExecutorServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
+void ExecutorConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
 {
   int errcode = posix::success_response;
   std::string::size_type slashpos = key.find('/');
@@ -92,7 +92,7 @@ void ExecutorServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
   unsetReturn(socket, errcode);
 }
 
-bool ExecutorServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept
+bool ExecutorConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept
 {
   if(std::strcmp(REQUIRED_USERNAME, posix::getusername(cred.uid))) // username must be "executor"
     return false; // didn't match, reject connection
@@ -107,14 +107,14 @@ bool ExecutorServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noe
   return false; // reject multiple connections from one endpoint
 }
 
-void ExecutorServer::removePeer(posix::fd_t socket) noexcept
+void ExecutorConfigServer::removePeer(posix::fd_t socket) noexcept
 {
   for(auto endpoint : m_endpoints)
     if(socket == endpoint.second)
     { m_endpoints.erase(endpoint.first); break; }
 }
 
-void ExecutorServer::request(posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept
+void ExecutorConfigServer::request(posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept
 {
   (void)addr;
   if(peerChooser(socket, cred))
@@ -123,7 +123,7 @@ void ExecutorServer::request(posix::fd_t socket, posix::sockaddr_t addr, proccre
     rejectPeerRequest(socket);
 }
 
-void ExecutorServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept
+void ExecutorConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept
 {
   (void)fd;
   std::string key, value;
@@ -148,7 +148,7 @@ void ExecutorServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) n
 }
 
 
-bool ExecutorServer::readconfig(const char* daemon)
+bool ExecutorConfigServer::readconfig(const char* daemon)
 {
   // construct config filename
   char name[PATH_MAX] = { 0 };
@@ -176,7 +176,7 @@ bool ExecutorServer::readconfig(const char* daemon)
   posix::chown(name, ::getuid(), posix::getgroupid(daemon)); // reset ownership
   posix::chmod(name, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP); // reset permissions
 
-  m_configfiles[name].fd = EventBackend::watch(name, EventFlags::FileMod);
-  m_configfiles[name].config.write(buffer);
+  m_configfiles[daemon].fd = EventBackend::watch(name, EventFlags::FileMod);
+  m_configfiles[daemon].config.write(buffer);
   return true;
 }

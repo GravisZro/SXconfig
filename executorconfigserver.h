@@ -1,5 +1,5 @@
-#ifndef EXECUTORSERVER_H
-#define EXECUTORSERVER_H
+#ifndef EXECUTORConfigSERVER_H
+#define EXECUTORConfigSERVER_H
 
 // PDTK
 #include <socket.h>
@@ -15,10 +15,10 @@
   server inout {int errcode, std::string value} get(std::string key);
 */
 
-class ExecutorServer : public ServerSocket
+class ExecutorConfigServer : public ServerSocket
 {
 public:
-  ExecutorServer(void) noexcept;
+  ExecutorConfigServer(void) noexcept;
 
 private:
   bool configUpdated(const posix::fd_t socket, const std::string& name                    ) const noexcept { return write(socket, vfifo("RPC", "configUpdated", name        ), posix::invalid_descriptor); }
@@ -46,4 +46,4 @@ private:
   std::unordered_map<std::string, configfile_t> m_configfiles;
 };
 
-#endif // EXECUTORSERVER_H
+#endif // EXECUTORConfigSERVER_H
