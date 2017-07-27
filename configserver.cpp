@@ -76,7 +76,7 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
      !peerData(endpoint->second))     // if old connection is mysteriously gone (can this happen?)
   {
     // construct config filename
-    char name[NAME_MAX] = { 0 };
+    char name[PATH_MAX] = { 0 };
 
     if(snprintf(name, PATH_MAX, FILENAME_PATTERN, state.name.c_str()) == posix::error_response) // I don't how this could fail
       return false; // unable to build config filename

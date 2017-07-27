@@ -151,7 +151,7 @@ void ExecutorServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) n
 bool ExecutorServer::readconfig(const char* daemon)
 {
   // construct config filename
-  char name[NAME_MAX] = { 0 };
+  char name[PATH_MAX] = { 0 };
 
   if(snprintf(name, PATH_MAX, FILENAME_PATTERN, daemon) == posix::error_response) // I don't how this could fail
     return false; // unable to build config filename
