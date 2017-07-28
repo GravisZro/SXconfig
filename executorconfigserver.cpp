@@ -11,7 +11,7 @@
 #include <cxxutils/syslogstream.h>
 #include <specialized/procstat.h>
 
-#define FILENAME_PATTERN "/etc/sxexecutor/%s.conf"
+#define CONFIG_PATH "/etc/sxexecutor"
 #define REQUIRED_USERNAME "executor"
 
 ExecutorConfigServer::ExecutorConfigServer(void) noexcept
@@ -182,7 +182,7 @@ bool ExecutorConfigServer::readconfig(const char* daemon)
   // construct config filename
   char name[PATH_MAX] = { 0 };
 
-  if(snprintf(name, PATH_MAX, FILENAME_PATTERN, daemon) == posix::error_response) // I don't how this could fail
+  if(snprintf(name, PATH_MAX, "%s/%s.conf", CONFIG_PATH, daemon) == posix::error_response) // I don't how this could fail
     return false; // unable to build config filename
 
   std::string buffer;

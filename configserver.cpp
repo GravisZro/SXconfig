@@ -12,7 +12,8 @@
 #include <cxxutils/syslogstream.h>
 #include <specialized/procstat.h>
 
-#define FILENAME_PATTERN "/etc/sxconfig/%s.conf"
+#define CONFIG_PATH "/etc/sxconfig"
+#define REQUIRED_GROUPNAME "config"
 
 ConfigServer::ConfigServer(void) noexcept
 {
@@ -83,7 +84,7 @@ void ConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
 
 bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept
 {
-  if(!posix::useringroup("config", posix::getusername(cred.uid)))
+  if(!posix::useringroup(REQUIRED_GROUPNAME, posix::getusername(cred.uid)))
     return false;
 
   process_state_t state;
@@ -97,7 +98,7 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
     // construct config filename
     char name[PATH_MAX] = { 0 };
 
-    if(snprintf(name, PATH_MAX, FILENAME_PATTERN, state.name.c_str()) == posix::error_response) // I don't how this could fail
+    if(snprintf(name, PATH_MAX, "%s/%s.conf", CONFIG_PATH, state.name.c_str()) == posix::error_response) // I don't how this could fail
       return false; // unable to build config filename
 
     std::string buffer;
