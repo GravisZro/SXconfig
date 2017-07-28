@@ -1,6 +1,11 @@
 #ifndef CONFIGSERVER_H
 #define CONFIGSERVER_H
 
+// STL
+#include <list>
+#include <string>
+#include <unordered_map>
+
 // PDTK
 #include <socket.h>
 #include <cxxutils/posix_helpers.h>
@@ -21,10 +26,10 @@ public:
   ConfigServer(void) noexcept;
 
 private:
-  bool configUpdated(const posix::fd_t socket                                             ) const noexcept { return write(socket, vfifo("RPC", "configUpdated"              ), posix::invalid_descriptor); }
-  bool unsetReturn  (const posix::fd_t socket, const int errcode                          ) const noexcept { return write(socket, vfifo("RPC", "unsetReturn", errcode       ), posix::invalid_descriptor); }
-  bool setReturn    (const posix::fd_t socket, const int errcode                          ) const noexcept { return write(socket, vfifo("RPC", "setReturn"  , errcode       ), posix::invalid_descriptor); }
-  bool getReturn    (const posix::fd_t socket, const int errcode, const std::string& value) const noexcept { return write(socket, vfifo("RPC", "getReturn"  , errcode, value), posix::invalid_descriptor); }
+  bool configUpdated(const posix::fd_t socket) const noexcept;
+  bool unsetReturn  (const posix::fd_t socket, const int errcode) const noexcept;
+  bool setReturn    (const posix::fd_t socket, const int errcode) const noexcept;
+  bool getReturn    (const posix::fd_t socket, const int errcode, const std::string& value, const std::list<std::string>& children) const noexcept;
 
   void unsetCall(posix::fd_t socket, std::string& key) noexcept;
   void setCall  (posix::fd_t socket, std::string& key, std::string& value) noexcept;
@@ -44,5 +49,20 @@ private:
   std::unordered_map<pid_t, posix::fd_t> m_endpoints;
   std::unordered_map<posix::fd_t, configfile_t> m_configfiles;
 };
+
+
+inline bool ConfigServer::configUpdated(const posix::fd_t socket) const noexcept
+  { return write(socket, vfifo("RPC", "configUpdated"), posix::invalid_descriptor); }
+
+inline bool ConfigServer::unsetReturn(const posix::fd_t socket, const int errcode) const noexcept
+  { return write(socket, vfifo("RPC", "unsetReturn", errcode), posix::invalid_descriptor); }
+
+inline bool ConfigServer::setReturn(const posix::fd_t socket, const int errcode) const noexcept
+  { return write(socket, vfifo("RPC", "setReturn", errcode), posix::invalid_descriptor); }
+
+inline bool ConfigServer::getReturn(const posix::fd_t socket, const int errcode,
+                                    const std::string& value, const std::list<std::string>& children) const noexcept
+  { return write(socket, vfifo("RPC", "getReturn", errcode, value, children), posix::invalid_descriptor); }
+
 
 #endif // CONFIGSERVER_H

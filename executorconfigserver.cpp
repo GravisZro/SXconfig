@@ -42,6 +42,7 @@ void ExecutorConfigServer::setCall(posix::fd_t socket, std::string& key, std::st
 
 void ExecutorConfigServer::getCall(posix::fd_t socket, std::string& key) noexcept
 {
+  std::list<std::string> children;
   std::string value;
   int errcode = posix::success_response;
   std::string::size_type slashpos = key.find('/');
@@ -60,11 +61,25 @@ void ExecutorConfigServer::getCall(posix::fd_t socket, std::string& key) noexcep
       if(node == nullptr)
         errcode = int(std::errc::invalid_argument); // doesn't exist
       else
-        value = node->value;
+      {
+        switch(node->type)
+        {
+          case node_t::type_e::array:
+          case node_t::type_e::multisection:
+          case node_t::type_e::section:
+            for(const auto& child : node->children)
+              children.push_back(child.first);
+          case node_t::type_e::invalid:
+          case node_t::type_e::value:
+          case node_t::type_e::string:
+            value = node->value;
+        }
+      }
     }
   }
-  getReturn(socket, errcode, value);
+  getReturn(socket, errcode, value, children);
 }
+
 
 void ExecutorConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
 {
@@ -86,7 +101,7 @@ void ExecutorConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexc
       if(node == nullptr)
         errcode = int(std::errc::invalid_argument); // doesn't exist
       else
-        node->values.erase(key.substr(offset + 1)); // erase child node if it exists
+        node->children.erase(key.substr(offset + 1)); // erase child node if it exists
     }
   }
   unsetReturn(socket, errcode);
@@ -138,6 +153,10 @@ void ExecutorConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t
           setCall(socket, key, value);
         break;
       case "getCall"_hash:
+        buffer >> key;
+        if(!buffer.hadError())
+          getCall(socket, key);
+        break;
       case "unsetCall"_hash:
         buffer >> key;
         if(!buffer.hadError())

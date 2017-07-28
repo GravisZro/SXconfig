@@ -33,17 +33,36 @@ void ConfigServer::setCall(posix::fd_t socket, std::string& key, std::string& va
 
 void ConfigServer::getCall(posix::fd_t socket, std::string& key) noexcept
 {
-  auto configfile = m_configfiles.find(socket);
-  assert(configfile != m_configfiles.end());
+  std::list<std::string> children;
   std::string value;
   int errcode = posix::success_response;
 
-  auto node = configfile->second.config.findNode(key);
-  if(node == nullptr)
-    errcode = posix::error(std::errc::invalid_argument);
+  auto configfile = m_configfiles.find(socket);
+
+  if(configfile != m_configfiles.end())
+    errcode = int(std::errc::io_error); // no config file for socket
   else
-    value = node->value;
-  getReturn(socket, errcode, value);
+  {
+    auto node = configfile->second.config.findNode(key);
+    if(node == nullptr)
+      errcode = int(std::errc::invalid_argument); // node doesn't exist
+    else
+    {
+      switch(node->type)
+      {
+        case node_t::type_e::array:
+        case node_t::type_e::multisection:
+        case node_t::type_e::section:
+          for(const auto& child : node->children)
+            children.push_back(child.first);
+        case node_t::type_e::invalid:
+        case node_t::type_e::value:
+        case node_t::type_e::string:
+          value = node->value;
+      }
+    }
+  }
+  getReturn(socket, errcode, value, children);
 }
 
 void ConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
@@ -57,7 +76,7 @@ void ConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
   if(node == nullptr)
     errcode = posix::error_response;
   else
-    node->values.erase(key.substr(offset + 1)); // erase child node if it exists
+    node->children.erase(key.substr(offset + 1)); // erase child node if it exists
 
   unsetReturn(socket, errcode);
 }
