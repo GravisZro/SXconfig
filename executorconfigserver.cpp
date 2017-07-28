@@ -21,6 +21,14 @@ ExecutorConfigServer::ExecutorConfigServer(void) noexcept
   Object::connect(disconnectedPeer, this, &ExecutorConfigServer::removePeer);
 }
 
+void ExecutorConfigServer::listConfigsCall(posix::fd_t socket) noexcept
+{
+  std::list<std::string> names;
+  for(const auto& confpair : m_configfiles)
+    names.push_back(confpair.first);
+  listConfigsReturn(socket, names);
+}
+
 void ExecutorConfigServer::setCall(posix::fd_t socket, std::string& key, std::string& value) noexcept
 {
   int errcode = posix::success_response;
@@ -79,7 +87,6 @@ void ExecutorConfigServer::getCall(posix::fd_t socket, std::string& key) noexcep
   }
   getReturn(socket, errcode, value, children);
 }
-
 
 void ExecutorConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
 {
@@ -147,6 +154,9 @@ void ExecutorConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t
     buffer >> value;
     switch(hash(value))
     {
+      case "listConfigsCall"_hash:
+        listConfigsCall(socket);
+        break;
       case "setCall"_hash:
         buffer >> key >> value;
         if(!buffer.hadError())
