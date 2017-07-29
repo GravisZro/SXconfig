@@ -2,6 +2,7 @@
 
 // POSIX
 #include <fcntl.h>
+#include <dirent.h>
 
 // POSIX++
 #include <cstdio>
@@ -14,8 +15,57 @@
 #define CONFIG_PATH "/etc/sxexecutor"
 #define REQUIRED_USERNAME "executor"
 
+static const char* configfilename(const char* base)
+{
+  // construct config filename
+  static char name[PATH_MAX];
+  std::memset(name, 0, PATH_MAX);
+  if(std::snprintf(name, PATH_MAX, "%s/%s.conf", CONFIG_PATH, base) == posix::error_response) // I don't how this could fail
+    return nullptr; // unable to build config filename
+  return name;
+}
+
+static bool readconfig(const char* base, std::string& buffer)
+{
+  const char* name = configfilename(base);
+  std::FILE* file = std::fopen(name, "a+b");
+
+  if(file == nullptr)
+  {
+    posix::syslog << "unable to open file: " << name << " : " << std::strerror(errno) << posix::eom;
+    return false;
+  }
+
+  buffer.clear();
+  buffer.resize(std::ftell(file), '\n');
+  if(buffer.size())
+  {
+    std::rewind(file);
+    std::fread(const_cast<char*>(buffer.data()), sizeof(std::string::value_type), buffer.size(), file);
+  }
+  std::fclose(file);
+  return true;
+}
+
+
 ExecutorConfigServer::ExecutorConfigServer(void) noexcept
 {
+  std::string buffer;
+  DIR* dir = ::opendir(CONFIG_PATH);
+  dirent* entry = nullptr;
+  char base[NAME_MAX];
+  while((entry = ::readdir(dir)) != nullptr)
+  {
+    std::memset(base, 0, NAME_MAX);
+    if(std::sscanf(entry->d_name, "%s.conf", base) == posix::success_response && // if filename base extracted properly AND
+       readconfig(base, buffer)) // able to read config file
+    {
+      m_configfiles[base].fd = EventBackend::watch(entry->d_name, EventFlags::FileMod);
+      m_configfiles[base].config.write(buffer);
+    }
+  }
+  ::closedir(dir);
+
   Object::connect(newPeerRequest  , this, &ExecutorConfigServer::request);
   Object::connect(newPeerMessage  , this, &ExecutorConfigServer::receive);
   Object::connect(disconnectedPeer, this, &ExecutorConfigServer::removePeer);
@@ -174,38 +224,4 @@ void ExecutorConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t
         break;
     }
   }
-}
-
-
-bool ExecutorConfigServer::readconfig(const char* daemon)
-{
-  // construct config filename
-  char name[PATH_MAX] = { 0 };
-
-  if(snprintf(name, PATH_MAX, "%s/%s.conf", CONFIG_PATH, daemon) == posix::error_response) // I don't how this could fail
-    return false; // unable to build config filename
-
-  std::string buffer;
-  std::FILE* file = std::fopen(name, "a+b");
-
-  if(file == nullptr)
-  {
-    posix::syslog << "unable to open file: " << name << " : " << std::strerror(errno) << posix::eom;
-    return false;
-  }
-
-  buffer.resize(std::ftell(file), '\n');
-  if(buffer.size())
-  {
-    std::rewind(file);
-    std::fread(const_cast<char*>(buffer.data()), sizeof(std::string::value_type), buffer.size(), file);
-  }
-  std::fclose(file);
-
-  posix::chown(name, ::getuid(), posix::getgroupid(daemon)); // reset ownership
-  posix::chmod(name, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP); // reset permissions
-
-  m_configfiles[daemon].fd = EventBackend::watch(name, EventFlags::FileMod);
-  m_configfiles[daemon].config.write(buffer);
-  return true;
 }

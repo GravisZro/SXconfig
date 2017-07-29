@@ -37,8 +37,6 @@ private:
   void receive        (posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept;
   void request        (posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept;
 
-  bool readconfig(const char* daemon);
-
   struct configfile_t
   {
     posix::fd_t fd; // watches for changes
