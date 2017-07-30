@@ -24,6 +24,7 @@ class ConfigServer : public ServerSocket
 {
 public:
   ConfigServer(void) noexcept;
+ ~ConfigServer(void) noexcept;
 
 private:
   bool configUpdated(const posix::fd_t socket) const noexcept;
@@ -40,6 +41,7 @@ private:
   void request(posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept;
 
   void removePeer(posix::fd_t socket) noexcept;
+  void fileUpdated(posix::fd_t file, EventData_t data) noexcept;
 
   struct configfile_t
   {

@@ -53,6 +53,12 @@ ConfigServer::ConfigServer(void) noexcept
   Object::connect(disconnectedPeer, this, &ConfigServer::removePeer);
 }
 
+ConfigServer::~ConfigServer(void) noexcept
+{
+  for(auto& confpair : m_configfiles)
+    Object::disconnect(confpair.second.fd); // disconnect filesystem monitor
+}
+
 void ConfigServer::setCall(posix::fd_t socket, std::string& key, std::string& value) noexcept
 {
   int errcode = posix::success_response;
@@ -138,13 +144,30 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
     posix::chown(confname, ::getuid(), cred.gid); // reset ownership
     posix::chmod(confname, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP); // reset permissions
 
-    m_configfiles[socket].fd = EventBackend::watch(confname, EventFlags::FileMod);
-    m_configfiles[socket].config.write(buffer);
+
+    auto& conffile = m_configfiles[socket];
+    conffile.fd = EventBackend::watch(confname, EventFlags::FileMod);
+    conffile.config.write(buffer);
+    Object::connect(conffile.fd, this, &ConfigServer::fileUpdated);
 
     m_endpoints[cred.pid] = socket; // insert or assign new value
     return true;
   }
   return false; // reject multiple connections from one endpoint
+}
+
+void ConfigServer::fileUpdated(posix::fd_t file, EventData_t data) noexcept
+{
+  (void)data;
+  posix::fd_t socket = 0;
+  for(auto& conffile : m_configfiles)
+    if(conffile.second.fd == file)
+      configUpdated(socket = conffile.first);
+
+  if(socket)
+    for(auto& endpoint : m_endpoints)
+      if(endpoint.second == socket)
+        std::printf("notify pid: %i\n", endpoint.first);
 }
 
 void ConfigServer::removePeer(posix::fd_t socket) noexcept

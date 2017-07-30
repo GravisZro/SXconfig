@@ -60,15 +60,43 @@ ExecutorConfigServer::ExecutorConfigServer(void) noexcept
     if(std::sscanf(entry->d_name, "%s.conf", base) == posix::success_response && // if filename base extracted properly AND
        readconfig(base, buffer)) // able to read config file
     {
-      m_configfiles[base].fd = EventBackend::watch(entry->d_name, EventFlags::FileMod);
-      m_configfiles[base].config.write(buffer);
+      std::printf("filename: %s\n", entry->d_name);
+      auto& conffile = m_configfiles[base];
+      conffile.fd = EventBackend::watch(entry->d_name, EventFlags::FileMod);
+      conffile.config.write(buffer);
+      Object::connect(conffile.fd, this, &ExecutorConfigServer::fileUpdated);
     }
   }
   ::closedir(dir);
 
+  m_dir = EventBackend::watch(CONFIG_PATH, EventFlags::DirEvent);
+  if(m_dir > 0)
+    Object::connect(m_dir, this, &ExecutorConfigServer::dirUpdated);
+
   Object::connect(newPeerRequest  , this, &ExecutorConfigServer::request);
   Object::connect(newPeerMessage  , this, &ExecutorConfigServer::receive);
   Object::connect(disconnectedPeer, this, &ExecutorConfigServer::removePeer);
+}
+
+ExecutorConfigServer::~ExecutorConfigServer(void) noexcept
+{
+  Object::disconnect(m_dir, EventFlags::DirEvent); // disconnect filesystem monitor
+  for(auto& confpair : m_configfiles)
+    Object::disconnect(confpair.second.fd, EventFlags::FileMod); // disconnect filesystem monitor
+}
+
+void ExecutorConfigServer::fileUpdated(posix::fd_t file, EventData_t data) noexcept
+{
+  (void)data;
+  for(auto& conffile : m_configfiles)
+    if(conffile.second.fd == file)
+      std::printf("file updated: %s\n", conffile.first.c_str());
+}
+
+void ExecutorConfigServer::dirUpdated(posix::fd_t dir, EventData_t data) noexcept
+{
+  (void)dir;
+  std::printf("dir updated: 0x%08x - 0x%08x\n", data.event_op1, data.event_op2);
 }
 
 void ExecutorConfigServer::listConfigsCall(posix::fd_t socket) noexcept

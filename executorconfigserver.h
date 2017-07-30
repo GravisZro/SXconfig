@@ -17,6 +17,7 @@ class ExecutorConfigServer : public ServerSocket
 {
 public:
   ExecutorConfigServer(void) noexcept;
+ ~ExecutorConfigServer(void) noexcept;
 
   bool configUpdated(const posix::fd_t socket, const std::string& name) const noexcept;
 
@@ -37,6 +38,9 @@ private:
   void receive        (posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept;
   void request        (posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept;
 
+  void fileUpdated(posix::fd_t file, EventData_t data) noexcept;
+  void dirUpdated (posix::fd_t dir , EventData_t data) noexcept;
+
   struct configfile_t
   {
     posix::fd_t fd; // watches for changes
@@ -44,6 +48,7 @@ private:
   };
   std::unordered_map<pid_t, posix::fd_t> m_endpoints;
   std::unordered_map<std::string, configfile_t> m_configfiles;
+  posix::fd_t m_dir;
 };
 
 inline bool ExecutorConfigServer::listConfigsReturn(const posix::fd_t socket, const std::list<std::string>& names) const noexcept
