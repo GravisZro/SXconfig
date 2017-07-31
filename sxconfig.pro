@@ -41,9 +41,9 @@ QMAKE_CXXFLAGS += -isystem /usr/include/c++/v1/
 #LIBS += -lrt
 
 system( test -z $CONTINUOUS_INTEGRATION ) {
-QMAKE_CXXFLAGS += -std=c++1y
-} else {
 QMAKE_CXXFLAGS += -std=c++14
+} else {
+QMAKE_CXXFLAGS += -std=c++1y
 }
 
 PDTK = ../pdtk
