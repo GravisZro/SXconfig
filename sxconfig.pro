@@ -11,8 +11,10 @@ QMAKE_CXXFLAGS += -fno-rtti
 QMAKE_CXXFLAGS += -fno-threadsafe-statics
 
 
-# for using libc++
+# for using musl/libc++
 libcxx {
+QMAKE_CXXFLAGS += -specs /usr/lib/x86_64-linux-musl/musl-gcc.specs
+QMAKE_CXXFLAGS += -fpermissive
 QMAKE_CXXFLAGS += -stdlib=libc++
 LIBS += -lc++
 QMAKE_CXXFLAGS += -isystem /usr/include/c++/v1/
@@ -40,30 +42,36 @@ QMAKE_CXXFLAGS += -isystem /usr/include/c++/v1/
 #LIBS += -lclang-3.9
 #LIBS += -lrt
 
-INCLUDEPATH += ../pdtk
+isEmpty( CONTINUOUS_INTEGRATION ) {
+PDTK = ../pdtk
+} else {
+PDTK = pdtk
+}
+
+INCLUDEPATH += $$PDTK
 
 SOURCES = main.cpp \
     configserver.cpp \
     executorconfigserver.cpp \
-    ../pdtk/application.cpp \
-    ../pdtk/socket.cpp \
-    ../pdtk/cxxutils/configmanip.cpp\
-    ../pdtk/specialized/eventbackend.cpp \
-    ../pdtk/specialized/peercred.cpp \
-    ../pdtk/specialized/procstat.cpp
+    $$PDTK/application.cpp \
+    $$PDTK/socket.cpp \
+    $$PDTK/cxxutils/configmanip.cpp\
+    $$PDTK/specialized/eventbackend.cpp \
+    $$PDTK/specialized/peercred.cpp \
+    $$PDTK/specialized/procstat.cpp
 
 HEADERS = \
     configserver.h \
     executorconfigserver.h \
-    ../pdtk/application.h \
-    ../pdtk/object.h \
-    ../pdtk/socket.h \
-    ../pdtk/cxxutils/posix_helpers.h \
-    ../pdtk/cxxutils/socket_helpers.h \
-    ../pdtk/cxxutils/error_helpers.h \
-    ../pdtk/cxxutils/configmanip.h \
-    ../pdtk/cxxutils/vfifo.h \
-    ../pdtk/specialized/eventbackend.h \
-    ../pdtk/specialized/peercred.h \
-    ../pdtk/cxxutils/syslogstream.h \
-    ../pdtk/specialized/procstat.h
+    $$PDTK/application.h \
+    $$PDTK/object.h \
+    $$PDTK/socket.h \
+    $$PDTK/cxxutils/posix_helpers.h \
+    $$PDTK/cxxutils/socket_helpers.h \
+    $$PDTK/cxxutils/error_helpers.h \
+    $$PDTK/cxxutils/configmanip.h \
+    $$PDTK/cxxutils/vfifo.h \
+    $$PDTK/specialized/eventbackend.h \
+    $$PDTK/specialized/peercred.h \
+    $$PDTK/cxxutils/syslogstream.h \
+    $$PDTK/specialized/procstat.h
