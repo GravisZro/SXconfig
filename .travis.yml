@@ -10,9 +10,9 @@ os:
 addons:
   apt:
     packages:
+    - g++-4.8
+    - clang-3.9
     - qt5-qmake
-    - gcc-5
-    - clang-3.8
 before_script:
   - git clone https://github.com/GravisZro/pdtk.git pdtk
 script:
