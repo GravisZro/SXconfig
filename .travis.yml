@@ -10,9 +10,11 @@ os:
 addons:
   apt:
     packages:
-    - qt4-qmake
+    - qt5-qmake
+    - gcc-5
+    - clang-3.8
 before_script:
   - git clone https://github.com/GravisZro/pdtk.git pdtk
-  - qmake
 script:
-  - make
+  - SPEC=$(echo $TRAVIS_OS_NAME-$CC | sed -e s/osx/macx/ -e s/gcc/g++/)
+  - qmake sxconfig.pro -spec $SPEC CONFIG+=debug && /usr/bin/make qmake_all
