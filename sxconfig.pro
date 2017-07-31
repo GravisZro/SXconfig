@@ -40,7 +40,7 @@ QMAKE_CXXFLAGS += -isystem /usr/include/c++/v1/
 #LIBS += -lclang-3.9
 #LIBS += -lrt
 
-isEmpty( CONTINUOUS_INTEGRATION ) {
+isEmpty( $$CONTINUOUS_INTEGRATION ) {
 PDTK = ../pdtk
 QMAKE_CXXFLAGS += -std=c++14
 } else {
