@@ -1,9 +1,25 @@
 language: cpp
-sudo: false
+sudo: required
 dist: trusty
 compiler:
-- clang++
-- g++
+  - clang++
+  - g++
 os:
-- linux
-- osx
+  - linux
+  - osx
+addons:
+  apt:
+    packages:
+    - qt4-qmake
+before_install:
+  - echo before install
+  - pwd
+  - qmake
+before_script:
+  - echo before script
+  - pwd
+  - qmake
+script:
+  - echo script
+  - pwd
+  - qmake
