@@ -11,12 +11,8 @@ addons:
   apt:
     packages:
     - qt4-qmake
-before_install:
-  - echo before install
-  - git clone https://github.com/GravisZro/pdtk.git pdtk
-install:
-  - echo install
 before_script:
-  - echo before script
+  - git clone https://github.com/GravisZro/pdtk.git pdtk
+  - qmake
 script:
-  - echo script
+  - make
