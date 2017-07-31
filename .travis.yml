@@ -1,0 +1,9 @@
+language: cpp
+sudo: false
+dist: trusty
+compiler:
+- clang++
+- g++
+os:
+- linux
+- osx
