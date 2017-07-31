@@ -2,8 +2,6 @@ TEMPLATE = app
 CONFIG -= qt
 #CONFIG += c++14
 
-QMAKE_CXXFLAGS += -std=c++14
-
 # optimizations
 QMAKE_CXXFLAGS += -Os
 QMAKE_CXXFLAGS += -fno-exceptions
@@ -44,8 +42,10 @@ QMAKE_CXXFLAGS += -isystem /usr/include/c++/v1/
 
 isEmpty( CONTINUOUS_INTEGRATION ) {
 PDTK = ../pdtk
+QMAKE_CXXFLAGS += -std=c++14
 } else {
 PDTK = pdtk
+QMAKE_CXXFLAGS += -std=c++1y
 }
 
 INCLUDEPATH += $$PDTK
