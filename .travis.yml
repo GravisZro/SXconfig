@@ -17,4 +17,4 @@ before_script:
   - git clone https://github.com/GravisZro/pdtk.git ../pdtk
 script:
   - SPEC=$(echo $TRAVIS_OS_NAME-$CC | sed -e s/osx/macx/ -e s/gcc/g++/ -e s/\\\(.*\\\)-clang/unsupported\\/\\1-clang/)
-  - qmake sxconfig.pro -spec $SPEC CONFIG+=debug && /usr/bin/make qmake_all
+  - qmake sxconfig.pro -spec $SPEC CONFIG+=debug && make
