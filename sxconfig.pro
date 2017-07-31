@@ -40,14 +40,13 @@ QMAKE_CXXFLAGS += -isystem /usr/include/c++/v1/
 #LIBS += -lclang-3.9
 #LIBS += -lrt
 
-isEmpty( $$CONTINUOUS_INTEGRATION ) {
-PDTK = ../pdtk
+isEmpty(CONTINUOUS_INTEGRATION) {
 QMAKE_CXXFLAGS += -std=c++14
 } else {
-PDTK = pdtk
 QMAKE_CXXFLAGS += -std=c++1y
 }
 
+PDTK = ../pdtk
 INCLUDEPATH += $$PDTK
 
 SOURCES = main.cpp \
