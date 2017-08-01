@@ -19,6 +19,8 @@ addons:
       - gcc-7/trusty
       - gcc-7-base/trusty
       - libstdc++-7-dev/trusty
+      - cpp-7/trusty
+      - libgcc-7-dev/trusty
       - qt5-qmake/sid
       - qtchooser/sid
 before_install:
