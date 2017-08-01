@@ -24,7 +24,7 @@ addons:
       - libgomp1/trusty
       - libasan4/trusty
       - libtsan0/trusty
-      - libquadmath0
+      - libquadmath0/trusty
       - qt5-qmake/sid
       - qtchooser/sid
 before_install:
