@@ -21,6 +21,10 @@ addons:
       - libstdc++-7-dev/trusty
       - cpp-7/trusty
       - libgcc-7-dev/trusty
+      - libgomp1/trusty
+      - libasan4/trusty
+      - libtsan0/trusty
+      - libquadmath0
       - qt5-qmake/sid
       - qtchooser/sid
 before_install:
