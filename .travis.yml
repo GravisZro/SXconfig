@@ -13,12 +13,19 @@ addons:
   apt:
     sources:
     - debian-sid
-    packages:
-    - g++-7
-    - clang-3.9
-    - qt5-qmake
+before_install:
+  - COMPILER_NAME=$(echo $CC | sed -e s/gcc/g++-7/ -s/clang/clang-3.9/)
+  - sudo apt-get update -qq
+  - sudo apt-get install qt5-make
+  - if [ $TRAVIS_OS_NAME = linux ]
+  - then
+  -   sudo apt-get install qt5-make $COMPILER_NAME
+  - elif [ $TRAVIS_OS_NAME = osx ]
+  - then
+  -   brew install qt5
+  -   brew link qt5 --force
+  - fi
 before_script:
-  - if [ $TRAVIS_OS_NAME = osx ] then brew install qt5; brew link qt5 --force; fi
   - git clone https://github.com/GravisZro/pdtk.git ../pdtk
 script:
   - SPEC=$(echo $TRAVIS_OS_NAME-$CC | sed -e s/osx/macx/ -e s/gcc/g++/)
