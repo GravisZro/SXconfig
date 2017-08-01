@@ -16,8 +16,8 @@ addons:
       - debian-sid
     packages:
       - g++-7/trusty
-      - gcc-7/trusty
       - gcc-7-base/trusty
+      - gcc-7/trusty
       - libstdc++-7-dev/trusty
       - cpp-7/trusty
       - libgcc-7-dev/trusty
@@ -25,6 +25,7 @@ addons:
       - libasan4/trusty
       - libtsan0/trusty
       - libquadmath0/trusty
+      - libitm1/trusty
       - qt5-qmake/sid
       - qtchooser/sid
 before_install:
