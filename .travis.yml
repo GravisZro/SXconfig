@@ -15,15 +15,8 @@ addons:
     - debian-sid
 before_install:
   - COMPILER_NAME=$(echo $CC | sed -e s/gcc/g++-7/ -e s/clang/clang-3.9/)
-  - if [ "${TRAVIS_OS_NAME}" = "linux" ]; \
-  - then; \
-  -   sudo apt-get update -qq; \
-  -   sudo apt-get install qt5-qmake $COMPILER_NAME; \
-  - elif [ "${TRAVIS_OS_NAME}" = "osx" ]; \
-  - then \
-  -   brew install qt5; \
-  -   brew link qt5 --force; \
-  - fi
+  - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then sudo apt-get update -qq; sudo apt-get install qt5-qmake $COMPILER_NAME; fi
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew install qt5; brew link qt5 --force; fi
 before_script:
   - git clone https://github.com/GravisZro/pdtk.git ../pdtk
 script:
