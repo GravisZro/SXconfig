@@ -16,7 +16,7 @@ addons:
     - clang-3.9
     - qt5-qmake
 before_script:
-  - if [ $TRAVIS_OS_NAME = osx ] then brew install qt5; fi
+  - if [ $TRAVIS_OS_NAME = osx ] then brew install qt5; brew link qt5 --force; fi
   - git clone https://github.com/GravisZro/pdtk.git ../pdtk
 script:
   - SPEC=$(echo $TRAVIS_OS_NAME-$CC | sed -e s/osx/macx/ -e s/gcc/g++/)
