@@ -15,17 +15,18 @@ addons:
       - ubuntu-toolchain-r-test
       - debian-sid
     packages:
-      - gcc-7-base:7.1.0-5ubuntu2~14.04
+      - gcc-7-base/trusty
       - g++-7/trusty
       - gcc-7/trusty
-      - libstdc++-7-dev/trusty
       - cpp-7/trusty
+      - libatomic1/trusty
+      - libasan4/trusty
       - libgcc-7-dev/trusty
       - libgomp1/trusty
-      - libasan4/trusty
-      - libtsan0/trusty
-      - libquadmath0/trusty
       - libitm1/trusty
+      - libquadmath0/trusty
+      - libstdc++-7-dev/trusty
+      - libtsan0/trusty
       - qt5-qmake/sid
       - qtchooser/sid
 before_install:
