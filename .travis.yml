@@ -9,21 +9,14 @@ os:
   - osx
 cache:
   apt: true
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-7
-      - qt4-qmake
 before_install:
   - COMPILER_NAME=$(echo $CC | sed -e s/gcc/g++-7/ -e s/clang/clang-3.9/)
-  - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then sudo ln -srf /usr/bin/asan_symbolize-3.9 /usr/bin/asan_symbolize; sudo ln -srf /usr/bin/c-index-test-3.9 /usr/bin/c-index-test; sudo ln -srf /usr/bin/clang++-3.9 /usr/bin/clang++; sudo ln -srf /usr/bin/clang-3.9 /usr/bin/clang; sudo ln -srf /usr/bin/clang-apply-replacements-3.9 /usr/bin/clang-apply-replacements; sudo ln -srf /usr/bin/clang-check-3.9 /usr/bin/clang-check; sudo ln -srf /usr/bin/clang-cl-3.9 /usr/bin/clang-cl; sudo ln -srf /usr/bin/clang-include-fixer-3.9 /usr/bin/clang-include-fixer; sudo ln -srf /usr/bin/clang-query-3.9 /usr/bin/clang-query; sudo ln -srf /usr/bin/clang-rename-3.9 /usr/bin/clang-rename; sudo ln -srf /usr/bin/find-all-symbols-3.9 /usr/bin/find-all-symbols; sudo ln -srf /usr/bin/modularize-3.9 /usr/bin/modularize; sudo ln -srf /usr/bin/sancov-3.9 /usr/bin/sancov; sudo ln -srf /usr/bin/scan-build-3.9 /usr/bin/scan-build; sudo ln -srf /usr/bin/scan-build-py-3.9 /usr/bin/scan-build-py; sudo ln -srf /usr/bin/scan-view-3.9 /usr/bin/scan-view; sudo ln -srf /usr/bin/gcc-7 /usr/bin/gcc; sudo ln -srf /usr/bin/g++-7 /usr/bin/g++; sudo ln -srf /usr/bin/cpp-7 /usr/bin/cpp; sudo ln -srf /usr/bin/gcc-ar-7 /usr/bin/gcc-ar; sudo ln -srf /usr/bin/gcc-nm-7 /usr/bin/gcc-nm; sudo ln -srf /usr/bin/gcc-ranlib-7 /usr/bin/gcc-ranlib; fi
-  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew install qt; fi
+  - if [ "$TRAVIS_OS_NAME-$CXX" = "linux-g++"     ]; then sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"; export DEBIAN_FRONTEND=noninteractive; sudo -E apt-get -yq update &>> ~/apt-get-update.log;; sudo -E apt-get -yq --no-install-suggests --no-install-recommends --force-yes install g++-7 qt4-qmake; sudo ln -srf /usr/bin/gcc-7 /usr/bin/gcc; sudo ln -srf /usr/bin/g++-7 /usr/bin/g++; sudo ln -srf /usr/bin/cpp-7 /usr/bin/cpp; sudo ln -srf /usr/bin/gcc-ar-7 /usr/bin/gcc-ar; sudo ln -srf /usr/bin/gcc-nm-7 /usr/bin/gcc-nm; sudo ln -srf /usr/bin/gcc-ranlib-7 /usr/bin/gcc-ranlib; fi
+  - if [ "$TRAVIS_OS_NAME-$CXX" = "linux-clang++" ]; then echo "deb http://ftp.us.debian.org/debian unstable main contrib non-free" | sudo tee -a /etc/apt/sources.list > /dev/null; export DEBIAN_FRONTEND=noninteractive; sudo -E apt-get -yq update &>> ~/apt-get-update.log;; sudo -E apt-get -yq --no-install-suggests --no-install-recommends --force-yes install clang clang-3.9 qt5-qmake; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install qt; fi
 before_script:
   - git clone https://github.com/GravisZro/pdtk.git ../pdtk
 script:
   - SPEC=$(echo $TRAVIS_OS_NAME-$CC | sed -e s/osx/macx/ -e s/gcc/g++/ -e s/\\\(.*\\\)-clang/unsupported\\/\\1-clang/)
   - clang++ --version
-  - g++ --version
   - qmake sxconfig.pro -spec $SPEC CONFIG+=debug && make
