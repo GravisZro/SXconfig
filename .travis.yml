@@ -32,6 +32,7 @@ addons:
       - libstdc++-7-dev/trusty
       - libtsan0/trusty
       - libubsan0/trusty
+      - libstdc++-6/sid
       - qt5-qmake/sid
       - qtchooser/sid
 before_install:
