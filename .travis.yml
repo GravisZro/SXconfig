@@ -15,8 +15,8 @@ addons:
       - ubuntu-toolchain-r-test
       - debian-sid
     packages:
+      - gcc-7-base:7.1.0-5ubuntu2~14.04
       - g++-7/trusty
-      - gcc-7-base/trusty
       - gcc-7/trusty
       - libstdc++-7-dev/trusty
       - cpp-7/trusty
