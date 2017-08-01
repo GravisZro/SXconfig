@@ -43,7 +43,7 @@ QMAKE_CXXFLAGS += -isystem /usr/include/c++/v1/
 #if not continuous integration environment...
 system( test -z "$CONTINUOUS_INTEGRATION" ):QMAKE_CXXFLAGS+=-std=c++14
 else { # if in a continuous integration environment...
-  system( test "$CC" = "clang" ):QMAKE_CXXFLAGS+=-std=c++11
+  system( test "$CC" = "clang" ):QMAKE_CXXFLAGS+=-std=gnu++1y
   else:QMAKE_CXXFLAGS+=-std=c++1y
 }
 
