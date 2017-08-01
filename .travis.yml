@@ -15,7 +15,10 @@ addons:
       - ubuntu-toolchain-r-test
       - debian-sid
     packages:
-      - -f g++-7/trusty
+      - g++-7/trusty
+      - gcc-7/trusty
+      - gcc-7-base/trusty
+      - libstdc++-7-dev/trusty
       - qt5-qmake/sid
       - qtchooser/sid
 before_install:
