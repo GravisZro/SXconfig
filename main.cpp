@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) noexcept
   (void)argc;
   (void)argv;
   std::atexit(exiting);
-  std::signal(SIGPIPE, SIG_IGN);
+  std::signal(SIGPIPE, SIG_IGN); // needed for OSX
 
   posix::syslog.open(appname, posix::facility::daemon);
 
