@@ -77,4 +77,4 @@ matrix:
 before_script:
   - git clone https://github.com/GravisZro/pdtk.git pdtk
 script:
-  - make -e CXX=$COMPILER -f Makefile.travis
+  - make -e CXX=$COMPILER -e VERBOSE=true -f Makefile.travis
