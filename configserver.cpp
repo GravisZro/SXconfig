@@ -56,7 +56,7 @@ ConfigServer::ConfigServer(void) noexcept
 ConfigServer::~ConfigServer(void) noexcept
 {
   for(auto& confpair : m_configfiles)
-    Object::disconnect(confpair.second.fd); // disconnect filesystem monitor
+    Object::disconnect(confpair.second.fd, EventFlags::Readable); // disconnect filesystem monitor
 }
 
 void ConfigServer::setCall(posix::fd_t socket, std::string& key, std::string& value) noexcept
@@ -148,7 +148,7 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
     auto& conffile = m_configfiles[socket];
     conffile.fd = EventBackend::watch(confname, EventFlags::FileMod);
     conffile.config.write(buffer);
-    Object::connect(conffile.fd, this, &ConfigServer::fileUpdated);
+    Object::connect(conffile.fd, EventFlags::Readable, this, &ConfigServer::fileUpdated);
 
     m_endpoints[cred.pid] = socket; // insert or assign new value
     return true;
@@ -175,7 +175,7 @@ void ConfigServer::removePeer(posix::fd_t socket) noexcept
   auto configfile = m_configfiles.find(socket);
   if(configfile != m_configfiles.end())
   {
-    Object::disconnect(configfile->second.fd);
+    Object::disconnect(configfile->second.fd, EventFlags::Readable);
     m_configfiles.erase(configfile);
 
     for(auto endpoint : m_endpoints)
