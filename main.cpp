@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) noexcept
                   << '"' << username << '"'
                   << " or have permissions to setuid/setgid"
                   << posix::eom;
-    std::exit(-1);
+    std::exit(errno);
   }
 
   Application app;
