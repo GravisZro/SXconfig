@@ -11,8 +11,13 @@
 #include <cxxutils/syslogstream.h>
 #include <specialized/procstat.h>
 
-#define CONFIG_PATH "/etc/sxconfig"
-#define REQUIRED_GROUPNAME "config"
+#ifndef CONFIG_PATH
+#define CONFIG_PATH           "/etc/config"
+#endif
+
+#ifndef CONFIG_GROUPNAME
+#define CONFIG_GROUPNAME      "config"
+#endif
 
 static const char* configfilename(const char* base)
 {
@@ -126,7 +131,7 @@ void ConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
 
 bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept
 {
-  if(!posix::useringroup(REQUIRED_GROUPNAME, posix::getusername(cred.uid)))
+  if(!posix::useringroup(CONFIG_GROUPNAME, posix::getusername(cred.uid)))
     return false;
 
   process_state_t state;
@@ -159,7 +164,7 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
 void ConfigServer::fileUpdated(posix::fd_t file, EventData_t data) noexcept
 {
   (void)data;
-  posix::fd_t socket = 0;
+  posix::fd_t socket = posix::invalid_descriptor;
   for(auto& conffile : m_configfiles)
     if(conffile.second.fd == file)
       configUpdated(socket = conffile.first);

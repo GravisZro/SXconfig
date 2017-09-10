@@ -12,15 +12,21 @@
 #include <cxxutils/syslogstream.h>
 #include <specialized/procstat.h>
 
-#define CONFIG_PATH "/etc/sxexecutor"
-#define REQUIRED_USERNAME "executor"
+
+#ifndef EXECUTOR_CONFIG_PATH
+#define EXECUTOR_CONFIG_PATH  "/etc/executor"
+#endif
+
+#ifndef EXECUTOR_USERNAME
+#define EXECUTOR_USERNAME     "executor"
+#endif
 
 static const char* configfilename(const char* base)
 {
   // construct config filename
   static char name[PATH_MAX];
   std::memset(name, 0, PATH_MAX);
-  if(std::snprintf(name, PATH_MAX, "%s/%s.conf", CONFIG_PATH, base) == posix::error_response) // I don't how this could fail
+  if(std::snprintf(name, PATH_MAX, "%s/%s.conf", EXECUTOR_CONFIG_PATH, base) == posix::error_response) // I don't how this could fail
     return nullptr; // unable to build config filename
   return name;
 }
@@ -51,7 +57,7 @@ static bool readconfig(const char* base, std::string& buffer)
 ExecutorConfigServer::ExecutorConfigServer(void) noexcept
 {
   std::string buffer;
-  DIR* dir = ::opendir(CONFIG_PATH);
+  DIR* dir = ::opendir(EXECUTOR_CONFIG_PATH);
   dirent* entry = nullptr;
   char base[NAME_MAX];
   while((entry = ::readdir(dir)) != nullptr)
@@ -69,7 +75,7 @@ ExecutorConfigServer::ExecutorConfigServer(void) noexcept
   }
   ::closedir(dir);
 
-  m_dir = EventBackend::watch(CONFIG_PATH, EventFlags::DirEvent);
+  m_dir = EventBackend::watch(EXECUTOR_CONFIG_PATH, EventFlags::DirEvent);
   if(m_dir > 0)
     Object::connect(m_dir, this, &ExecutorConfigServer::dirUpdated);
 
@@ -194,7 +200,7 @@ void ExecutorConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexc
 
 bool ExecutorConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept
 {
-  if(std::strcmp(REQUIRED_USERNAME, posix::getusername(cred.uid))) // username must be "executor"
+  if(std::strcmp(EXECUTOR_USERNAME, posix::getusername(cred.uid))) // username must be "executor"
     return false; // didn't match, reject connection
 
   auto endpoint = m_endpoints.find(cred.pid);
