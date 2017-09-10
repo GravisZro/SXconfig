@@ -27,7 +27,7 @@ ifndef BUILD_PATH
 endif
 
 PDTK          = ./pdtk
-INCPATH       = -I. -I$PDTK
+INCPATH       = -I. -I$(PDTK)
 CFLAGS        = -pipe -g -Wall -W -fPIC $(DEFINES) $(INCPATH)
 CXXFLAGS      = -pipe -std=c++14 -Os -fno-exceptions -fno-rtti -fno-threadsafe-statics -g -Wall -W -fPIC $(DEFINES) $(INCPATH)
 LDFLAGS       = 
@@ -36,12 +36,12 @@ TARGET        = sxconfig
 SOURCES       = main.cpp \
 		configserver.cpp \
 		executorconfigserver.cpp \
-		$PDTK/application.cpp \
-		$PDTK/socket.cpp \
-		$PDTK/cxxutils/configmanip.cpp \
-		$PDTK/specialized/eventbackend.cpp \
-		$PDTK/specialized/peercred.cpp \
-		$PDTK/specialized/procstat.cpp
+		$(PDTK)/application.cpp \
+		$(PDTK)/socket.cpp \
+		$(PDTK)/cxxutils/configmanip.cpp \
+		$(PDTK)/specialized/eventbackend.cpp \
+		$(PDTK)/specialized/peercred.cpp \
+		$(PDTK)/specialized/procstat.cpp
 
 OBJS := $(SOURCES:.s=.o)
 OBJS := $(OBJS:.c=.o)
@@ -62,8 +62,8 @@ $(TARGET): OUTPUT_DIR $(OBJS)
 	$(QUIET) $(CXX) -o $@ $(OBJS) $(LDFLAGS)
 
 OUTPUT_DIR:
-	$(QUIET) mkdir -p $(BUILD_PATH)/$PDTK/cxxutils
-	$(QUIET) mkdir -p $(BUILD_PATH)/$PDTK/specialized
+	$(QUIET) mkdir -p $(BUILD_PATH)/$(PDTK)/cxxutils
+	$(QUIET) mkdir -p $(BUILD_PATH)/$(PDTK)/specialized
 
 clean:
 	$(QUIET) rm -f $(TARGET)
