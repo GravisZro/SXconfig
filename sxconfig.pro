@@ -3,6 +3,7 @@ CONFIG -= qt
 #CONFIG += c++14
 
 # optimizations
+QMAKE_CXXFLAGS += -std=c++14
 QMAKE_CXXFLAGS += -Os
 QMAKE_CXXFLAGS += -fno-exceptions
 QMAKE_CXXFLAGS += -fno-rtti
@@ -39,8 +40,6 @@ QMAKE_CXXFLAGS += -isystem /usr/include/c++/v1/
 #LIBS += -lgcc_s
 #LIBS += -lclang-3.9
 #LIBS += -lrt
-
-QMAKE_CXXFLAGS+=-std=c++14
 
 PDTK = ../pdtk
 INCLUDEPATH += $$PDTK
