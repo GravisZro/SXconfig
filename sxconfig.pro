@@ -12,7 +12,10 @@ QMAKE_CXXFLAGS += -fno-threadsafe-statics
 
 # for using musl/libc++
 libcxx {
-QMAKE_CXXFLAGS += -specs /usr/lib/x86_64-linux-musl/musl-gcc.specs
+QMAKE_CXXFLAGS += -nostdinc -isystem /usr/include/x86_64-linux-musl
+QMAKE_LFLAGS += -L/usr/lib/x86_64-linux-musl
+
+#QMAKE_CXXFLAGS += -specs /usr/lib/x86_64-linux-musl/musl-gcc.specs
 QMAKE_CXXFLAGS += -fpermissive
 QMAKE_CXXFLAGS += -stdlib=libc++
 LIBS += -lc++
@@ -52,7 +55,9 @@ SOURCES = main.cpp \
     $$PDTK/cxxutils/configmanip.cpp\
     $$PDTK/specialized/eventbackend.cpp \
     $$PDTK/specialized/peercred.cpp \
-    $$PDTK/specialized/procstat.cpp
+    $$PDTK/specialized/procstat.cpp \
+    $$PDTK/specialized/PollEvent.cpp \
+    $$PDTK/specialized/FileEvent.cpp
 
 HEADERS = \
     configserver.h \
@@ -68,4 +73,6 @@ HEADERS = \
     $$PDTK/specialized/eventbackend.h \
     $$PDTK/specialized/peercred.h \
     $$PDTK/cxxutils/syslogstream.h \
-    $$PDTK/specialized/procstat.h
+    $$PDTK/specialized/procstat.h \
+    $$PDTK/specialized/PollEvent.h \
+    $$PDTK/specialized/FileEvent.h

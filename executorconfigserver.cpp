@@ -68,17 +68,17 @@ ExecutorConfigServer::ExecutorConfigServer(void) noexcept
     {
       std::printf("filename: %s\n", entry->d_name);
       auto& conffile = m_configfiles[base];
-      conffile.fd = EventBackend::watch(entry->d_name, EventFlags::FileMod);
+      conffile.fevent = std::make_unique<FileEvent>(entry->d_name, FileEvent::Modified);
       conffile.config.write(buffer);
-      Object::connect(conffile.fd, this, &ExecutorConfigServer::fileUpdated);
+      Object::connect(conffile.fevent->activated, this, &ExecutorConfigServer::fileUpdated);
     }
   }
   ::closedir(dir);
-
+/*
   m_dir = EventBackend::watch(EXECUTOR_CONFIG_PATH, EventFlags::DirEvent);
   if(m_dir > 0)
     Object::connect(m_dir, this, &ExecutorConfigServer::dirUpdated);
-
+*/
   Object::connect(newPeerRequest  , this, &ExecutorConfigServer::request);
   Object::connect(newPeerMessage  , this, &ExecutorConfigServer::receive);
   Object::connect(disconnectedPeer, this, &ExecutorConfigServer::removePeer);
@@ -86,23 +86,17 @@ ExecutorConfigServer::ExecutorConfigServer(void) noexcept
 
 ExecutorConfigServer::~ExecutorConfigServer(void) noexcept
 {
-  Object::disconnect(m_dir, EventFlags::DirEvent); // disconnect filesystem monitor
-  for(auto& confpair : m_configfiles)
-    Object::disconnect(confpair.second.fd, EventFlags::FileMod); // disconnect filesystem monitor
+//  Object::disconnect(m_dir, EventFlags::DirEvent); // disconnect filesystem monitor
 }
 
-void ExecutorConfigServer::fileUpdated(posix::fd_t file, EventData_t data) noexcept
+void ExecutorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept
 {
-  (void)data;
-  for(auto& conffile : m_configfiles)
-    if(conffile.second.fd == file)
-      std::printf("file updated: %s\n", conffile.first.c_str());
+  std::printf("file updated: %s - 0x%02x\n", filename, flags);
 }
 
-void ExecutorConfigServer::dirUpdated(posix::fd_t dir, EventData_t data) noexcept
+void ExecutorConfigServer::dirUpdated(const char* dirname, FileEvent::Flags_t flags) noexcept
 {
-  (void)dir;
-  std::printf("dir updated: 0x%08x - 0x%08x\n", data.event_op1, data.event_op2);
+  std::printf("dir updated: %s - 0x%02x\n", dirname, flags);
 }
 
 void ExecutorConfigServer::listConfigsCall(posix::fd_t socket) noexcept

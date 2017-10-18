@@ -5,6 +5,7 @@
 #include <list>
 #include <string>
 #include <unordered_map>
+#include <memory>
 
 // PDTK
 #include <socket.h>
@@ -12,6 +13,7 @@
 #include <cxxutils/vfifo.h>
 #include <cxxutils/hashing.h>
 #include <cxxutils/configmanip.h>
+#include <specialized/FileEvent.h>
 
 /*
   server out   void configUpdated(void);
@@ -41,11 +43,11 @@ private:
   void request(posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept;
 
   void removePeer(posix::fd_t socket) noexcept;
-  void fileUpdated(posix::fd_t file, EventData_t data) noexcept;
+  void fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept;
 
   struct configfile_t
   {
-    posix::fd_t fd; // watches for changes
+    std::unique_ptr<FileEvent> fevent;
     ConfigManip config;
   };
   std::unordered_map<pid_t, posix::fd_t> m_endpoints;

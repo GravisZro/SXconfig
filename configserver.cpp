@@ -60,8 +60,6 @@ ConfigServer::ConfigServer(void) noexcept
 
 ConfigServer::~ConfigServer(void) noexcept
 {
-  for(auto& confpair : m_configfiles)
-    Object::disconnect(confpair.second.fd, EventFlags::Readable); // disconnect filesystem monitor
 }
 
 void ConfigServer::setCall(posix::fd_t socket, std::string& key, std::string& value) noexcept
@@ -149,11 +147,10 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
     posix::chown(confname, ::getuid(), cred.gid); // reset ownership
     posix::chmod(confname, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP); // reset permissions
 
-
     auto& conffile = m_configfiles[socket];
-    conffile.fd = EventBackend::watch(confname, EventFlags::FileMod);
+    conffile.fevent = std::make_unique<FileEvent>(confname, FileEvent::Modified);
     conffile.config.write(buffer);
-    Object::connect(conffile.fd, EventFlags::Readable, this, &ConfigServer::fileUpdated);
+    Object::connect(conffile.fevent->activated, this, &ConfigServer::fileUpdated);
 
     m_endpoints[cred.pid] = socket; // insert or assign new value
     return true;
@@ -161,15 +158,14 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
   return false; // reject multiple connections from one endpoint
 }
 
-void ConfigServer::fileUpdated(posix::fd_t file, EventData_t data) noexcept
+void ConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept
 {
-  (void)data;
   posix::fd_t socket = posix::invalid_descriptor;
   for(auto& conffile : m_configfiles)
-    if(conffile.second.fd == file)
+    if(!std::strcmp(conffile.second.fevent->file(), filename))
       configUpdated(socket = conffile.first);
 
-  if(socket)
+  if(socket != posix::invalid_descriptor)
     for(auto& endpoint : m_endpoints)
       if(endpoint.second == socket)
         std::printf("notify pid: %i\n", endpoint.first);
@@ -180,7 +176,6 @@ void ConfigServer::removePeer(posix::fd_t socket) noexcept
   auto configfile = m_configfiles.find(socket);
   if(configfile != m_configfiles.end())
   {
-    Object::disconnect(configfile->second.fd, EventFlags::Readable);
     m_configfiles.erase(configfile);
 
     for(auto endpoint : m_endpoints)

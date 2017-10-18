@@ -12,6 +12,7 @@
 #include <cxxutils/vfifo.h>
 #include <cxxutils/hashing.h>
 #include <cxxutils/configmanip.h>
+#include <specialized/FileEvent.h>
 
 class ExecutorConfigServer : public ServerSocket
 {
@@ -38,17 +39,17 @@ private:
   void receive        (posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept;
   void request        (posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept;
 
-  void fileUpdated(posix::fd_t file, EventData_t data) noexcept;
-  void dirUpdated (posix::fd_t dir , EventData_t data) noexcept;
+  void fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept;
+  void dirUpdated (const char* dirname , FileEvent::Flags_t flags) noexcept;
 
   struct configfile_t
   {
-    posix::fd_t fd; // watches for changes
+    std::unique_ptr<FileEvent> fevent;
     ConfigManip config;
   };
   std::unordered_map<pid_t, posix::fd_t> m_endpoints;
   std::unordered_map<std::string, configfile_t> m_configfiles;
-  posix::fd_t m_dir;
+  std::unique_ptr<FileEvent> m_dir;
 };
 
 inline bool ExecutorConfigServer::listConfigsReturn(const posix::fd_t socket, const std::list<std::string>& names) const noexcept
