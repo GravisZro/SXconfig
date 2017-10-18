@@ -40,6 +40,8 @@ SOURCES       = main.cpp \
 		$(PDTK)/socket.cpp \
 		$(PDTK)/cxxutils/configmanip.cpp \
 		$(PDTK)/specialized/eventbackend.cpp \
+		$(PDTK)/specialized/FileEvent.cpp \
+		$(PDTK)/specialized/PollEvent.cpp \
 		$(PDTK)/specialized/peercred.cpp \
 		$(PDTK)/specialized/procstat.cpp
 
