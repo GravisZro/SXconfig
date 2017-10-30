@@ -9,6 +9,7 @@ QMAKE_CXXFLAGS += -fno-exceptions
 QMAKE_CXXFLAGS += -fno-rtti
 QMAKE_CXXFLAGS += -fno-threadsafe-statics
 
+DEFINES += INTERRUPTED_WRAPPER
 
 # for using musl/libc++
 libcxx {
