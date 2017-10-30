@@ -2,7 +2,7 @@
 #define EXECUTORCONFIGSERVER_H
 
 // STL
-#include <list>
+#include <vector>
 #include <string>
 #include <unordered_map>
 
@@ -23,11 +23,11 @@ public:
   bool configUpdated(const posix::fd_t socket, const std::string& name) const noexcept;
 
 private:
-  bool listConfigsReturn(const posix::fd_t socket, const std::list<std::string>& names) const noexcept;
+  bool listConfigsReturn(const posix::fd_t socket, const std::vector<std::string>& names) const noexcept;
   bool setReturn        (const posix::fd_t socket, const int errcode) const noexcept;
   bool unsetReturn      (const posix::fd_t socket, const int errcode) const noexcept;
   bool getReturn        (const posix::fd_t socket, const int errcode,
-                         const std::string& value, const std::list<std::string>& children) const noexcept;
+                         const std::string& value, const std::vector<std::string>& children) const noexcept;
 
   void listConfigsCall(posix::fd_t socket) noexcept;
   void setCall        (posix::fd_t socket, std::string& key, std::string& value) noexcept;
@@ -52,7 +52,7 @@ private:
   std::unique_ptr<FileEvent> m_dir;
 };
 
-inline bool ExecutorConfigServer::listConfigsReturn(const posix::fd_t socket, const std::list<std::string>& names) const noexcept
+inline bool ExecutorConfigServer::listConfigsReturn(const posix::fd_t socket, const std::vector<std::string>& names) const noexcept
   { return write(socket, vfifo("RPC", "listConfigsReturn", names), posix::invalid_descriptor); }
 
 inline bool ExecutorConfigServer::configUpdated(const posix::fd_t socket, const std::string& name) const noexcept
@@ -65,7 +65,7 @@ inline bool ExecutorConfigServer::unsetReturn  (const posix::fd_t socket, const 
   { return write(socket, vfifo("RPC", "unsetReturn", errcode), posix::invalid_descriptor); }
 
 inline bool ExecutorConfigServer::getReturn(const posix::fd_t socket, const int errcode,
-                                            const std::string& value, const std::list<std::string>& children) const noexcept
+                                            const std::string& value, const std::vector<std::string>& children) const noexcept
   { return write(socket, vfifo("RPC", "getReturn", errcode, value, children), posix::invalid_descriptor); }
 
 

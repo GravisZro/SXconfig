@@ -101,7 +101,7 @@ void ExecutorConfigServer::dirUpdated(const char* dirname, FileEvent::Flags_t fl
 
 void ExecutorConfigServer::listConfigsCall(posix::fd_t socket) noexcept
 {
-  std::list<std::string> names;
+  std::vector<std::string> names;
   for(const auto& confpair : m_configfiles)
     names.push_back(confpair.first);
   listConfigsReturn(socket, names);
@@ -128,7 +128,7 @@ void ExecutorConfigServer::setCall(posix::fd_t socket, std::string& key, std::st
 
 void ExecutorConfigServer::getCall(posix::fd_t socket, std::string& key) noexcept
 {
-  std::list<std::string> children;
+  std::vector<std::string> children;
   std::string value;
   int errcode = posix::success_response;
   std::string::size_type slashpos = key.find('/');
