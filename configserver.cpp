@@ -141,14 +141,14 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
      !peerData(endpoint->second))     // if old connection is mysteriously gone (can this happen?)
   {
     std::string buffer;
-    const char* confname = configfilename(state.name.c_str());
-    readconfig(confname, buffer);
+    const char* filename = configfilename(state.name.c_str());
+    readconfig(filename, buffer);
 
-    posix::chown(confname, ::getuid(), cred.gid); // reset ownership
-    posix::chmod(confname, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP); // reset permissions
+    posix::chown(filename, ::getuid(), cred.gid); // reset ownership
+    posix::chmod(filename, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP); // reset permissions
 
     auto& conffile = m_configfiles[socket];
-    conffile.fevent = std::make_unique<FileEvent>(confname, FileEvent::Modified);
+    conffile.fevent = std::make_unique<FileEvent>(filename, FileEvent::Modified);
     conffile.config.write(buffer);
     Object::connect(conffile.fevent->activated, this, &ConfigServer::fileUpdated);
 
