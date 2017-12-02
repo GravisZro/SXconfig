@@ -1,3 +1,7 @@
+# Custom
+
+pdtk
+
 # C++ objects and libs
 
 *.slo
@@ -28,7 +32,6 @@ Makefile*
 # QtCreator
 
 *.autosave
-*.autosave.*
 
 #QtCtreator Qml
 *.qmlproject.user
