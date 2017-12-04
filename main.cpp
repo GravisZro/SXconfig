@@ -14,8 +14,8 @@
 #include "configserver.h"
 #include "executorconfigserver.h"
 
-#ifndef APP_NAME
-#define APP_NAME                "SXconfig"
+#ifndef CONFIG_APP_NAME
+#define CONFIG_APP_NAME         "SXconfig"
 #endif
 
 #ifndef MCFS_PATH
@@ -27,15 +27,15 @@
 #endif
 
 #ifndef CONFIG_GROUPNAME
-#define CONFIG_GROUPNAME        "config"
+#define CONFIG_GROUPNAME        CONFIG_USERNAME
 #endif
 
 #ifndef CONFIG_IO_SOCKET
-#define CONFIG_IO_SOCKET        "/" CONFIG_USERNAME "/io"
+#define CONFIG_IO_SOCKET        MCFS_PATH "/" CONFIG_USERNAME "/io"
 #endif
 
 #ifndef CONFIG_EXECUTOR_SOCKET
-#define CONFIG_EXECUTOR_SOCKET  "/" CONFIG_USERNAME "/executor"
+#define CONFIG_EXECUTOR_SOCKET  MCFS_PATH "/" CONFIG_USERNAME "/executor"
 #endif
 
 void exiting(void)
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) noexcept
   std::atexit(exiting);
   std::signal(SIGPIPE, SIG_IGN); // needed for OSX
 
-  posix::syslog.open(APP_NAME, posix::facility::daemon);
+  posix::syslog.open(CONFIG_APP_NAME, posix::facility::daemon);
 
   if((std::strcmp(posix::getgroupname(::getgid()), CONFIG_GROUPNAME) && // if current username is NOT what we want AND
       ::setgid(posix::getgroupid(CONFIG_GROUPNAME)) == posix::error_response) || // unable to change user id
@@ -69,16 +69,16 @@ int main(int argc, char *argv[]) noexcept
   ConfigServer config_server;
   ExecutorConfigServer executor_server;
 
-  if(config_server.bind(MCFS_PATH CONFIG_IO_SOCKET))
-    posix::syslog << posix::priority::info << "daemon bound to " << MCFS_PATH CONFIG_IO_SOCKET << posix::eom;
+  if(config_server.bind(CONFIG_IO_SOCKET))
+    posix::syslog << posix::priority::info << "daemon bound to " << CONFIG_IO_SOCKET << posix::eom;
   else
-    posix::syslog << posix::priority::error << "unable to bind daemon to " << MCFS_PATH CONFIG_IO_SOCKET << posix::eom;
+    posix::syslog << posix::priority::error << "unable to bind daemon to " << CONFIG_IO_SOCKET << posix::eom;
 
 
-  if(executor_server.bind(MCFS_PATH CONFIG_EXECUTOR_SOCKET))
-    posix::syslog << posix::priority::info << "daemon bound to " << MCFS_PATH CONFIG_EXECUTOR_SOCKET << posix::eom;
+  if(executor_server.bind(CONFIG_EXECUTOR_SOCKET))
+    posix::syslog << posix::priority::info << "daemon bound to " << CONFIG_EXECUTOR_SOCKET << posix::eom;
   else
-    posix::syslog << posix::priority::error << "unable to bind daemon to " << MCFS_PATH CONFIG_EXECUTOR_SOCKET << posix::eom;
+    posix::syslog << posix::priority::error << "unable to bind daemon to " << CONFIG_EXECUTOR_SOCKET << posix::eom;
 
   return app.exec();
 }
