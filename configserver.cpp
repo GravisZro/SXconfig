@@ -7,6 +7,9 @@
 #include <cstdio>
 #include <climits>
 
+// STL
+#include <memory>
+
 // PDTK
 #include <cxxutils/syslogstream.h>
 #include <specialized/procstat.h>
