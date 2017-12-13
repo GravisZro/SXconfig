@@ -52,10 +52,10 @@ int main(int argc, char *argv[]) noexcept
 
   posix::syslog.open(CONFIG_APP_NAME, posix::facility::daemon);
 
-  if((std::strcmp(posix::getgroupname(::getgid()), CONFIG_GROUPNAME) && // if current username is NOT what we want AND
-      ::setgid(posix::getgroupid(CONFIG_GROUPNAME)) == posix::error_response) || // unable to change user id
-     (std::strcmp(posix::getusername(::getuid()), CONFIG_USERNAME) && // if current username is NOT what we want AND
-      ::setuid(posix::getuserid (CONFIG_USERNAME)) == posix::error_response)) // unable to change user id
+  if((std::strcmp(posix::getgroupname(posix::getgid()), CONFIG_GROUPNAME) && // if current username is NOT what we want AND
+      !posix::setgid(posix::getgroupid(CONFIG_GROUPNAME))) || // unable to change user id
+     (std::strcmp(posix::getusername(posix::getuid()), CONFIG_USERNAME) && // if current username is NOT what we want AND
+      !posix::setuid(posix::getuserid (CONFIG_USERNAME)))) // unable to change user id
   {
     posix::syslog << posix::priority::critical
                   << "daemon must be launched as username "
