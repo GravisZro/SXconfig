@@ -16,10 +16,10 @@
 #include <specialized/FileEvent.h>
 
 /*
-  server out   void configUpdated(void);
-  server inout {int errcode} unset(std::string key);
-  server inout {int errcode} set(std::string key, std::string value);
-  server inout {int errcode, std::string value} get(std::string key);
+  server out   void valueUpdate(std::string key, std::string value);
+  server inout {posix::error_t errcode} unset(std::string key);
+  server inout {posix::error_t errcode} set(std::string key, std::string value);
+  server inout {posix::error_t errcode, std::string value} get(std::string key);
 */
 
 class ConfigServer : public ServerSocket
@@ -29,14 +29,16 @@ public:
  ~ConfigServer(void) noexcept;
 
 private:
-  bool configUpdated(const posix::fd_t socket) const noexcept;
-  bool unsetReturn  (const posix::fd_t socket, const int errcode) const noexcept;
-  bool setReturn    (const posix::fd_t socket, const int errcode) const noexcept;
-  bool getReturn    (const posix::fd_t socket, const int errcode, const std::string& value, const std::list<std::string>& children) const noexcept;
+  bool valueUpdate      (const posix::fd_t socket, const std::string& key, const std::string& value) const noexcept;
+  bool fullUpdateReturn (const posix::fd_t socket, const posix::error_t errcode) const noexcept;
+  bool unsetReturn      (const posix::fd_t socket, const posix::error_t errcode) const noexcept;
+  bool setReturn        (const posix::fd_t socket, const posix::error_t errcode) const noexcept;
+  bool getReturn        (const posix::fd_t socket, const posix::error_t errcode, const std::string& value, const std::list<std::string>& children) const noexcept;
 
-  void unsetCall(posix::fd_t socket, std::string& key) noexcept;
-  void setCall  (posix::fd_t socket, std::string& key, std::string& value) noexcept;
-  void getCall  (posix::fd_t socket, std::string& key) noexcept;
+  void fullUpdateCall (posix::fd_t socket) noexcept;
+  void unsetCall      (posix::fd_t socket, std::string& key) noexcept;
+  void setCall        (posix::fd_t socket, std::string& key, std::string& value) noexcept;
+  void getCall        (posix::fd_t socket, std::string& key) noexcept;
 
   bool peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept;
   void receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept;
@@ -55,16 +57,19 @@ private:
 };
 
 
-inline bool ConfigServer::configUpdated(const posix::fd_t socket) const noexcept
-  { return write(socket, vfifo("RPC", "configUpdated"), posix::invalid_descriptor); }
+inline bool ConfigServer::valueUpdate(const posix::fd_t socket, const std::string& key, const std::string& value) const noexcept
+  { return write(socket, vfifo("RPC", "valueUpdate", key, value), posix::invalid_descriptor); }
 
-inline bool ConfigServer::unsetReturn(const posix::fd_t socket, const int errcode) const noexcept
+inline bool ConfigServer::fullUpdateReturn(const posix::fd_t socket, const posix::error_t errcode) const noexcept
+  { return write(socket, vfifo("RPC", "fullUpdateReturn", errcode), posix::invalid_descriptor); }
+
+inline bool ConfigServer::unsetReturn(const posix::fd_t socket, const posix::error_t errcode) const noexcept
   { return write(socket, vfifo("RPC", "unsetReturn", errcode), posix::invalid_descriptor); }
 
-inline bool ConfigServer::setReturn(const posix::fd_t socket, const int errcode) const noexcept
+inline bool ConfigServer::setReturn(const posix::fd_t socket, const posix::error_t errcode) const noexcept
   { return write(socket, vfifo("RPC", "setReturn", errcode), posix::invalid_descriptor); }
 
-inline bool ConfigServer::getReturn(const posix::fd_t socket, const int errcode,
+inline bool ConfigServer::getReturn(const posix::fd_t socket, const posix::error_t errcode,
                                     const std::string& value, const std::list<std::string>& children) const noexcept
   { return write(socket, vfifo("RPC", "getReturn", errcode, value, children), posix::invalid_descriptor); }
 

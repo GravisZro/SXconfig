@@ -1,4 +1,4 @@
-#include "executorconfigserver.h"
+﻿#include "executorconfigserver.h"
 
 // POSIX
 #include <fcntl.h>
@@ -46,7 +46,7 @@ static bool readconfig(const char* base, std::string& buffer)
   }
 
   buffer.clear();
-  buffer.resize(std::ftell(file), '\n');
+  buffer.resize(posix::size_t(std::ftell(file)), '\n');
   if(buffer.size())
   {
     std::rewind(file);
@@ -94,12 +94,12 @@ ExecutorConfigServer::~ExecutorConfigServer(void) noexcept
 
 void ExecutorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept
 {
-  std::printf("file updated: %s - 0x%02x\n", filename, flags);
+  std::printf("file updated: %s - 0x%02x\n", filename, uint8_t(flags));
 }
 
 void ExecutorConfigServer::dirUpdated(const char* dirname, FileEvent::Flags_t flags) noexcept
 {
-  std::printf("dir updated: %s - 0x%02x\n", dirname, flags);
+  std::printf("dir updated: %s - 0x%02x\n", dirname, uint8_t(flags));
 }
 
 void ExecutorConfigServer::listConfigsCall(posix::fd_t socket) noexcept
@@ -110,9 +110,24 @@ void ExecutorConfigServer::listConfigsCall(posix::fd_t socket) noexcept
   listConfigsReturn(socket, names);
 }
 
+void ExecutorConfigServer::fullUpdateCall(posix::fd_t socket) noexcept
+{
+  for(const auto& confpair : m_configfiles) // for each parsed config file
+  {
+    std::list<std::pair<std::string, std::string>> data;
+    confpair.second.config.exportKeyPairs(data); // export config data
+    for(auto& pair : data) // for each key pair
+    {
+      pair.first.insert(0, confpair.first); // prepend file path
+      valueUpdate(socket, pair.first, pair.second); // send value
+    }
+  }
+  fullUpdateReturn(socket, posix::success_response); // send call response
+}
+
 void ExecutorConfigServer::setCall(posix::fd_t socket, std::string& key, std::string& value) noexcept
 {
-  int errcode = posix::success_response;
+  posix::error_t errcode = posix::success_response;
   std::string::size_type slashpos = key.find('/');
   if(slashpos == std::string::npos || // if not found OR
      !slashpos || // if first character OR
@@ -133,7 +148,7 @@ void ExecutorConfigServer::getCall(posix::fd_t socket, std::string& key) noexcep
 {
   std::vector<std::string> children;
   std::string value;
-  int errcode = posix::success_response;
+  posix::error_t errcode = posix::success_response;
   std::string::size_type slashpos = key.find('/');
   if(slashpos == std::string::npos || // if not found OR
      !slashpos || // if first character OR
@@ -171,7 +186,7 @@ void ExecutorConfigServer::getCall(posix::fd_t socket, std::string& key) noexcep
 
 void ExecutorConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
 {
-  int errcode = posix::success_response;
+  posix::error_t errcode = posix::success_response;
   std::string::size_type slashpos = key.find('/');
   if(slashpos == std::string::npos || // if not found OR
      !slashpos || // if first character OR
@@ -230,13 +245,16 @@ void ExecutorConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t
 {
   (void)fd;
   std::string key, value;
-  if(!(buffer >> value).hadError() && value == "RPC")
+  if(!(buffer >> value).hadError() && value == "RPC" &&
+     !(buffer >> value).hadError())
   {
-    buffer >> value;
     switch(hash(value))
     {
       case "listConfigsCall"_hash:
         listConfigsCall(socket);
+        break;
+      case "fullUpdateCall"_hash:
+        fullUpdateCall(socket);
         break;
       case "setCall"_hash:
         buffer >> key >> value;

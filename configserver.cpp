@@ -14,8 +14,8 @@
 #include <cxxutils/syslogstream.h>
 #include <specialized/procstat.h>
 
-#ifndef CONFIG_PATH
-#define CONFIG_PATH           "/etc/config"
+#ifndef CONFIG_CONFIG_PATH
+#define CONFIG_CONFIG_PATH    "/etc/config"
 #endif
 
 #ifndef CONFIG_GROUPNAME
@@ -27,7 +27,7 @@ static const char* configfilename(const char* base)
   // construct config filename
   static char name[PATH_MAX];
   std::memset(name, 0, PATH_MAX);
-  if(std::snprintf(name, PATH_MAX, "%s/%s.conf", CONFIG_PATH, base) == posix::error_response) // I don't how this could fail
+  if(std::snprintf(name, PATH_MAX, "%s/%s.conf", CONFIG_CONFIG_PATH, base) == posix::error_response) // I don't how this could fail
     return nullptr; // unable to build config filename
   return name;
 }
@@ -67,7 +67,7 @@ ConfigServer::~ConfigServer(void) noexcept
 
 void ConfigServer::setCall(posix::fd_t socket, std::string& key, std::string& value) noexcept
 {
-  int errcode = posix::success_response;
+  posix::error_t errcode = posix::success_response;
   auto configfile = m_configfiles.find(socket);
   if(configfile == m_configfiles.end())
     errcode = int(std::errc::io_error); // not a valid key!
@@ -78,7 +78,7 @@ void ConfigServer::setCall(posix::fd_t socket, std::string& key, std::string& va
 
 void ConfigServer::getCall(posix::fd_t socket, std::string& key) noexcept
 {
-  int errcode = posix::success_response;
+  posix::error_t errcode = posix::success_response;
   std::list<std::string> children;
   std::string value;
 
@@ -112,22 +112,35 @@ void ConfigServer::getCall(posix::fd_t socket, std::string& key) noexcept
 
 void ConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
 {
-  int errcode = posix::success_response;
+  posix::error_t errcode = posix::success_response;
   auto configfile = m_configfiles.find(socket);
 
   if(configfile == m_configfiles.end())
-    errcode = int(std::errc::io_error); // no such config file!
+    errcode = posix::error_t(std::errc::io_error); // no such config file!
   else
   {
     posix::size_t offset = key.find_last_of('/');
     auto node = configfile->second.config.findNode(key.substr(0, offset)); // look for parent node
     if(node == nullptr)
-      errcode = int(std::errc::invalid_argument);
+      errcode = posix::error_t(std::errc::invalid_argument);
     else
       node->children.erase(key.substr(offset + 1)); // erase child node if it exists
   }
 
   unsetReturn(socket, errcode);
+}
+
+void ConfigServer::fullUpdateCall(posix::fd_t socket) noexcept
+{
+  const auto& confpair = m_configfiles.find(socket); // find parsed config file
+  if(confpair != m_configfiles.end())
+  {
+    std::list<std::pair<std::string, std::string>> data;
+    confpair->second.config.exportKeyPairs(data); // export config data
+    for(const auto& pair : data) // for each key pair
+      valueUpdate(socket, pair.first, pair.second); // send value
+  }
+  fullUpdateReturn(socket, posix::success_response); // send call response
 }
 
 bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept
@@ -166,12 +179,17 @@ void ConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) n
   posix::fd_t socket = posix::invalid_descriptor;
   for(auto& conffile : m_configfiles)
     if(!std::strcmp(conffile.second.fevent->file(), filename))
-      configUpdated(socket = conffile.first);
-
+    {
+      socket = conffile.first;
+      // find differences
+      //configUpdated(, );
+    }
+/*
   if(socket != posix::invalid_descriptor)
     for(auto& endpoint : m_endpoints)
       if(endpoint.second == socket)
         std::printf("notify pid: %i\n", endpoint.first);
+*/
 }
 
 void ConfigServer::removePeer(posix::fd_t socket) noexcept
@@ -200,9 +218,9 @@ void ConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noe
 {
   (void)fd;
   std::string key, value;
-  if(!(buffer >> value).hadError() && value == "RPC")
+  if(!(buffer >> value).hadError() && value == "RPC" &&
+     !(buffer >> value).hadError())
   {
-    buffer >> value;
     switch(hash(value))
     {
       case "setCall"_hash:
