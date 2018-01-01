@@ -34,6 +34,7 @@ LDFLAGS       =
 
 TARGET        = sxconfig
 SOURCES       = main.cpp \
+		configcore.cpp \
 		configserver.cpp \
 		executorconfigserver.cpp \
 		$(PDTK)/application.cpp \
