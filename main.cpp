@@ -10,16 +10,12 @@
 #include <object.h>
 #include <cxxutils/syslogstream.h>
 
-// project
-#include "configserver.h"
-#include "executorconfigserver.h"
+// Project
+#include "configcore.h"
+
 
 #ifndef CONFIG_APP_NAME
 #define CONFIG_APP_NAME         "SXconfig"
-#endif
-
-#ifndef MCFS_PATH
-#define MCFS_PATH               "/mc"
 #endif
 
 #ifndef CONFIG_USERNAME
@@ -28,14 +24,6 @@
 
 #ifndef CONFIG_GROUPNAME
 #define CONFIG_GROUPNAME        CONFIG_USERNAME
-#endif
-
-#ifndef CONFIG_IO_SOCKET
-#define CONFIG_IO_SOCKET        MCFS_PATH "/" CONFIG_USERNAME "/io"
-#endif
-
-#ifndef CONFIG_EXECUTOR_SOCKET
-#define CONFIG_EXECUTOR_SOCKET  MCFS_PATH "/" CONFIG_USERNAME "/executor"
 #endif
 
 void exiting(void)
@@ -66,19 +54,7 @@ int main(int argc, char *argv[]) noexcept
   }
 
   Application app;
-  ConfigServer config_server;
-  ExecutorConfigServer executor_server;
-
-  if(config_server.bind(CONFIG_IO_SOCKET))
-    posix::syslog << posix::priority::info << "daemon bound to " << CONFIG_IO_SOCKET << posix::eom;
-  else
-    posix::syslog << posix::priority::error << "unable to bind daemon to " << CONFIG_IO_SOCKET << posix::eom;
-
-
-  if(executor_server.bind(CONFIG_EXECUTOR_SOCKET))
-    posix::syslog << posix::priority::info << "daemon bound to " << CONFIG_EXECUTOR_SOCKET << posix::eom;
-  else
-    posix::syslog << posix::priority::error << "unable to bind daemon to " << CONFIG_EXECUTOR_SOCKET << posix::eom;
-
+  ConfigCore core;
+  (void)core;
   return app.exec();
 }

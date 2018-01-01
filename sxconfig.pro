@@ -53,12 +53,14 @@ SOURCES = main.cpp \
     executorconfigserver.cpp \
     $$PDTK/application.cpp \
     $$PDTK/socket.cpp \
+    $$PDTK/asyncfd.cpp \
     $$PDTK/cxxutils/configmanip.cpp\
     $$PDTK/specialized/eventbackend.cpp \
     $$PDTK/specialized/peercred.cpp \
     $$PDTK/specialized/procstat.cpp \
     $$PDTK/specialized/PollEvent.cpp \
-    $$PDTK/specialized/FileEvent.cpp
+    $$PDTK/specialized/FileEvent.cpp \
+    configcore.cpp
 
 HEADERS = \
     configserver.h \
@@ -66,6 +68,7 @@ HEADERS = \
     $$PDTK/application.h \
     $$PDTK/object.h \
     $$PDTK/socket.h \
+    $$PDTK/asyncfd.h \
     $$PDTK/cxxutils/posix_helpers.h \
     $$PDTK/cxxutils/socket_helpers.h \
     $$PDTK/cxxutils/error_helpers.h \
@@ -76,4 +79,5 @@ HEADERS = \
     $$PDTK/cxxutils/syslogstream.h \
     $$PDTK/specialized/procstat.h \
     $$PDTK/specialized/PollEvent.h \
-    $$PDTK/specialized/FileEvent.h
+    $$PDTK/specialized/FileEvent.h \
+    configcore.h
