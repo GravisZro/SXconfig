@@ -63,20 +63,23 @@ ExecutorConfigServer::ExecutorConfigServer(void) noexcept
   DIR* dir = ::opendir(EXECUTOR_CONFIG_PATH);
   dirent* entry = nullptr;
   char base[NAME_MAX];
-  while((entry = ::readdir(dir)) != nullptr)
+  if(dir != nullptr)
   {
-    std::memset(base, 0, NAME_MAX);
-    if(std::sscanf(entry->d_name, "%s.conf", base) == posix::success_response && // if filename base extracted properly AND
-       readconfig(base, buffer)) // able to read config file
+    while((entry = ::readdir(dir)) != nullptr)
     {
-      std::printf("filename: %s\n", entry->d_name);
-      auto& conffile = m_configfiles[base];
-      conffile.fevent = std::make_unique<FileEvent>(entry->d_name, FileEvent::Modified);
-      conffile.config.write(buffer);
-      Object::connect(conffile.fevent->activated, this, &ExecutorConfigServer::fileUpdated);
+      std::memset(base, 0, NAME_MAX);
+      if(std::sscanf(entry->d_name, "%s.conf", base) == posix::success_response && // if filename base extracted properly AND
+         readconfig(base, buffer)) // able to read config file
+      {
+        std::printf("filename: %s\n", entry->d_name);
+        auto& conffile = m_configfiles[base];
+        conffile.fevent = std::make_unique<FileEvent>(entry->d_name, FileEvent::WriteEvent);
+        conffile.config.importText(buffer);
+        Object::connect(conffile.fevent->activated, this, &ExecutorConfigServer::fileUpdated);
+      }
     }
+    ::closedir(dir);
   }
-  ::closedir(dir);
 /*
   m_dir = EventBackend::watch(EXECUTOR_CONFIG_PATH, EventFlags::DirEvent);
   if(m_dir > 0)
