@@ -9,6 +9,7 @@
 
 // STL
 #include <memory>
+#include <algorithm>
 
 // PDTK
 #include <cxxutils/syslogstream.h>
@@ -85,12 +86,12 @@ void ConfigServer::getCall(posix::fd_t socket, std::string& key) noexcept
   auto configfile = m_configfiles.find(socket);
 
   if(configfile != m_configfiles.end())
-    errcode = int(std::errc::io_error); // no config file for socket
+    errcode = posix::error_t(std::errc::io_error); // no config file for socket
   else
   {
     auto node = configfile->second.config.findNode(key);
     if(node == nullptr)
-      errcode = int(std::errc::invalid_argument); // node doesn't exist
+      errcode = posix::error_t(std::errc::invalid_argument); // node doesn't exist
     else
     {
       switch(node->type)
@@ -158,14 +159,15 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
   {
     std::string buffer;
     const char* filename = configfilename(state.name.c_str());
-    readconfig(filename, buffer);
 
     posix::chown(filename, ::getuid(), cred.gid); // reset ownership
     posix::chmod(filename, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP); // reset permissions
 
+    readconfig(filename, buffer);
+
     auto& conffile = m_configfiles[socket];
-    conffile.fevent = std::make_unique<FileEvent>(filename, FileEvent::Modified);
-    conffile.config.write(buffer);
+    conffile.fevent = std::make_unique<FileEvent>(filename, FileEvent::WriteEvent); // monitor file for write event
+    conffile.config.importText(buffer);
     Object::connect(conffile.fevent->activated, this, &ConfigServer::fileUpdated);
 
     m_endpoints[cred.pid] = socket; // insert or assign new value
@@ -177,19 +179,33 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
 void ConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept
 {
   posix::fd_t socket = posix::invalid_descriptor;
-  for(auto& conffile : m_configfiles)
-    if(!std::strcmp(conffile.second.fevent->file(), filename))
-    {
-      socket = conffile.first;
-      // find differences
-      //configUpdated(, );
-    }
-/*
-  if(socket != posix::invalid_descriptor)
-    for(auto& endpoint : m_endpoints)
-      if(endpoint.second == socket)
-        std::printf("notify pid: %i\n", endpoint.first);
-*/
+  if(flags.WriteEvent)
+    for(auto& conffile : m_configfiles)
+      if(!std::strcmp(conffile.second.fevent->file(), filename))
+      {
+        socket = conffile.first;
+        std::string tmp_buffer;
+        ConfigManip tmp_config;
+        if(readconfig(filename, tmp_buffer) &&
+           tmp_config.importText(tmp_buffer))
+        {
+          std::list<std::pair<std::string, std::string>> current_config, new_config;
+          conffile.second.config.exportKeyPairs(current_config);
+          tmp_config.exportKeyPairs(new_config);
+          std::remove_if(new_config.begin(), new_config.end(),
+                         [current_config](const auto& value)
+                         { return std::find(current_config.begin(), current_config.end(), value) != current_config.end(); });
+          for(auto& value : new_config)
+          {
+            auto node = conffile.second.config.getNode(value.first);
+            node->type = node_t::type_e::value;
+            node->value = value.second;
+            valueUpdate(socket, value.first, value.second); // invoke value update
+          }
+        }
+        else
+          posix::syslog << posix::priority::warning << "Failed to read/parse config file: " << filename << posix::eom;
+      }
 }
 
 void ConfigServer::removePeer(posix::fd_t socket) noexcept
