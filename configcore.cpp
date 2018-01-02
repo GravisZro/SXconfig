@@ -35,7 +35,7 @@ ConfigCore::ConfigCore(void)
 
   if(m_executor_server.bind(CONFIG_EXECUTOR_SOCKET))
     posix::syslog << posix::priority::info << "Config daemon bound to " << CONFIG_EXECUTOR_SOCKET << posix::eom;
-  else if(m_config_server.bind(ANONYMOUS_SOCKET CONFIG_EXECUTOR_SOCKET))
+  else if(m_executor_server.bind(ANONYMOUS_SOCKET CONFIG_EXECUTOR_SOCKET))
     posix::syslog << posix::priority::info << "Config daemon bound to anonymous socket " << CONFIG_EXECUTOR_SOCKET << posix::eom;
   else
     posix::syslog << posix::priority::error << "Unable to bind Config daemon to " << CONFIG_EXECUTOR_SOCKET << posix::eom;
