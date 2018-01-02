@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) noexcept
   std::signal(SIGPIPE, SIG_IGN); // needed for OSX
 
   posix::syslog.open(CONFIG_APP_NAME, posix::facility::daemon);
-
+/*
   if((std::strcmp(posix::getgroupname(posix::getgid()), CONFIG_GROUPNAME) && // if current username is NOT what we want AND
       !posix::setgid(posix::getgroupid(CONFIG_GROUPNAME))) || // unable to change user id
      (std::strcmp(posix::getusername(posix::getuid()), CONFIG_USERNAME) && // if current username is NOT what we want AND
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) noexcept
                   << posix::eom;
     std::exit(errno);
   }
-
+*/
   Application app;
   ConfigCore core;
   (void)core;

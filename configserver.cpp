@@ -167,6 +167,7 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
 
     auto& conffile = m_configfiles[socket];
     conffile.fevent = std::make_unique<FileEvent>(filename, FileEvent::WriteEvent); // monitor file for write event
+    conffile.config.clear(); // erase any existing data
     conffile.config.importText(buffer);
     Object::connect(conffile.fevent->activated, this, &ConfigServer::fileUpdated);
 
@@ -180,28 +181,35 @@ void ConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) n
 {
   posix::fd_t socket = posix::invalid_descriptor;
   if(flags.WriteEvent)
-    for(auto& conffile : m_configfiles)
-      if(!std::strcmp(conffile.second.fevent->file(), filename))
+    for(auto& confpair : m_configfiles)
+      if(!std::strcmp(confpair.second.fevent->file(), filename))
       {
-        socket = conffile.first;
         std::string tmp_buffer;
-        ConfigManip tmp_config;
+        std::list<std::pair<std::string, std::string>> old_config, new_values, removed_values;
+
+        confpair.second.config.exportKeyPairs(old_config); // export data
+        confpair.second.config.clear(); // wipe config
+
+        socket = confpair.first;
+        removed_values = old_config;
+
         if(readconfig(filename, tmp_buffer) &&
-           tmp_config.importText(tmp_buffer))
+           confpair.second.config.importText(tmp_buffer))
         {
-          std::list<std::pair<std::string, std::string>> current_config, new_config;
-          conffile.second.config.exportKeyPairs(current_config);
-          tmp_config.exportKeyPairs(new_config);
-          std::remove_if(new_config.begin(), new_config.end(),
-                         [current_config](const auto& value)
-                         { return std::find(current_config.begin(), current_config.end(), value) != current_config.end(); });
-          for(auto& value : new_config)
-          {
-            auto node = conffile.second.config.getNode(value.first);
-            node->type = node_t::type_e::value;
-            node->value = value.second;
-            valueUpdate(socket, value.first, value.second); // invoke value update
-          }
+          confpair.second.config.exportKeyPairs(new_values);
+
+          for(auto& pair : new_values)
+            std::remove_if(removed_values.begin(), removed_values.end(), // remove matching keys (leaving deleted key/value pairs)
+                           [pair](const auto& value) { return value.first == pair.first; });
+
+          for(auto& pair : old_config)
+            new_values.remove(pair); // remove identical values (leaving only new key/value pairs)
+
+          for(auto& pair : removed_values)
+            valueUnset(socket, pair.first); // invoke value deletion
+
+          for(auto& pair : new_values)
+            valueUpdate(socket, pair.first, pair.second); // invoke value update
         }
         else
           posix::syslog << posix::priority::warning << "Failed to read/parse config file: " << filename << posix::eom;

@@ -10,6 +10,7 @@
 
 // STL
 #include <memory>
+#include <algorithm>
 
 // PDTK
 #include <cxxutils/syslogstream.h>
@@ -71,9 +72,9 @@ ExecutorConfigServer::ExecutorConfigServer(void) noexcept
       if(std::sscanf(entry->d_name, "%s.conf", base) == posix::success_response && // if filename base extracted properly AND
          readconfig(base, buffer)) // able to read config file
       {
-        std::printf("filename: %s\n", entry->d_name);
         auto& conffile = m_configfiles[base];
         conffile.fevent = std::make_unique<FileEvent>(entry->d_name, FileEvent::WriteEvent);
+        conffile.config.clear(); // erase any existing data
         conffile.config.importText(buffer);
         Object::connect(conffile.fevent->activated, this, &ExecutorConfigServer::fileUpdated);
       }
@@ -92,12 +93,50 @@ ExecutorConfigServer::ExecutorConfigServer(void) noexcept
 
 ExecutorConfigServer::~ExecutorConfigServer(void) noexcept
 {
-//  Object::disconnect(m_dir, EventFlags::DirEvent); // disconnect filesystem monitor
 }
 
 void ExecutorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept
 {
-  std::printf("file updated: %s - 0x%02x\n", filename, uint8_t(flags));
+  if(flags.WriteEvent)
+    for(auto& confpair : m_configfiles)
+      if(!std::strcmp(confpair.second.fevent->file(), filename))
+      {
+        std::string tmp_buffer;
+        std::list<std::pair<std::string, std::string>> old_config, new_values, removed_values;
+
+        confpair.second.config.exportKeyPairs(old_config); // export data
+        confpair.second.config.clear(); // wipe config
+        removed_values = old_config;
+
+        if(readconfig(filename, tmp_buffer) &&
+           confpair.second.config.importText(tmp_buffer))
+        {
+          confpair.second.config.exportKeyPairs(new_values);
+
+          for(auto& pair : new_values)
+            std::remove_if(removed_values.begin(), removed_values.end(), // remove matching keys (leaving deleted key/value pairs)
+                           [pair](const auto& value) { return value.first == pair.first; });
+
+          for(auto& pair : old_config)
+            new_values.remove(pair); // remove identical values (leaving only new key/value pairs)
+
+          for(auto& pair : removed_values)
+          {
+            pair.first.insert(0, confpair.first);
+            for(auto& endpoint : m_endpoints)
+              valueUnset(endpoint.second, pair.first); // invoke value deletion
+          }
+
+          for(auto& pair : new_values)
+          {
+            pair.first.insert(0, confpair.first);
+            for(auto& endpoint : m_endpoints)
+              valueUpdate(endpoint.second, pair.first, pair.second); // invoke value update
+          }
+        }
+        else
+          posix::syslog << posix::priority::warning << "Failed to read/parse config file: " << filename << posix::eom;
+      }
 }
 
 void ExecutorConfigServer::dirUpdated(const char* dirname, FileEvent::Flags_t flags) noexcept

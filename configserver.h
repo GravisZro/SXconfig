@@ -15,13 +15,6 @@
 #include <cxxutils/configmanip.h>
 #include <specialized/FileEvent.h>
 
-/*
-  server out   void valueUpdate(std::string key, std::string value);
-  server inout {posix::error_t errcode} unset(std::string key);
-  server inout {posix::error_t errcode} set(std::string key, std::string value);
-  server inout {posix::error_t errcode, std::string value} get(std::string key);
-*/
-
 class ConfigServer : public ServerSocket
 {
 public:
@@ -30,6 +23,7 @@ public:
 
 private:
   bool valueUpdate      (const posix::fd_t socket, const std::string& key, const std::string& value) const noexcept;
+  bool valueUnset       (const posix::fd_t socket, const std::string& key) const noexcept;
   bool fullUpdateReturn (const posix::fd_t socket, const posix::error_t errcode) const noexcept;
   bool unsetReturn      (const posix::fd_t socket, const posix::error_t errcode) const noexcept;
   bool setReturn        (const posix::fd_t socket, const posix::error_t errcode) const noexcept;
@@ -56,9 +50,11 @@ private:
   std::unordered_map<posix::fd_t, configfile_t> m_configfiles;
 };
 
-
 inline bool ConfigServer::valueUpdate(const posix::fd_t socket, const std::string& key, const std::string& value) const noexcept
   { return write(socket, vfifo("RPC", "valueUpdate", key, value), posix::invalid_descriptor); }
+
+inline bool ConfigServer::valueUnset(const posix::fd_t socket, const std::string& key) const noexcept
+  { return write(socket, vfifo("RPC", "valueUnset", key), posix::invalid_descriptor); }
 
 inline bool ConfigServer::fullUpdateReturn(const posix::fd_t socket, const posix::error_t errcode) const noexcept
   { return write(socket, vfifo("RPC", "fullUpdateReturn", errcode), posix::invalid_descriptor); }
@@ -72,6 +68,5 @@ inline bool ConfigServer::setReturn(const posix::fd_t socket, const posix::error
 inline bool ConfigServer::getReturn(const posix::fd_t socket, const posix::error_t errcode,
                                     const std::string& value, const std::list<std::string>& children) const noexcept
   { return write(socket, vfifo("RPC", "getReturn", errcode, value, children), posix::invalid_descriptor); }
-
 
 #endif // CONFIGSERVER_H

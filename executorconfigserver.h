@@ -20,7 +20,8 @@ public:
   ExecutorConfigServer(void) noexcept;
  ~ExecutorConfigServer(void) noexcept;
 
-  bool valueUpdate  (const posix::fd_t socket, const std::string& key, const std::string& value) const noexcept;
+  bool valueUpdate(const posix::fd_t socket, const std::string& key, const std::string& value) const noexcept;
+  bool valueUnset (const posix::fd_t socket, const std::string& key) const noexcept;
 
 private:
   bool listConfigsReturn(const posix::fd_t socket, const std::vector<std::string>& names) const noexcept;
@@ -63,6 +64,9 @@ inline bool ExecutorConfigServer::fullUpdateReturn(const posix::fd_t socket, con
 inline bool ExecutorConfigServer::valueUpdate(const posix::fd_t socket, const std::string& key, const std::string& value) const noexcept
   { return write(socket, vfifo("RPC", "valueUpdate", key, value), posix::invalid_descriptor); }
 
+inline bool ExecutorConfigServer::valueUnset(const posix::fd_t socket, const std::string& key) const noexcept
+  { return write(socket, vfifo("RPC", "valueUnset", key), posix::invalid_descriptor); }
+
 inline bool ExecutorConfigServer::setReturn(const posix::fd_t socket, const posix::error_t errcode) const noexcept
   { return write(socket, vfifo("RPC", "setReturn", errcode), posix::invalid_descriptor); }
 
@@ -72,6 +76,5 @@ inline bool ExecutorConfigServer::unsetReturn  (const posix::fd_t socket, const 
 inline bool ExecutorConfigServer::getReturn(const posix::fd_t socket, const posix::error_t errcode,
                                             const std::string& value, const std::vector<std::string>& children) const noexcept
   { return write(socket, vfifo("RPC", "getReturn", errcode, value, children), posix::invalid_descriptor); }
-
 
 #endif
