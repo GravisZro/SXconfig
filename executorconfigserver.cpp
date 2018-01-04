@@ -121,18 +121,12 @@ void ExecutorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t 
             new_values.remove(pair); // remove identical values (leaving only new key/value pairs)
 
           for(auto& pair : removed_values)
-          {
-            pair.first.insert(0, confpair.first);
             for(auto& endpoint : m_endpoints)
-              valueUnset(endpoint.second, pair.first); // invoke value deletion
-          }
+              valueUnset(endpoint.second, confpair.first, pair.first); // invoke value deletion
 
           for(auto& pair : new_values)
-          {
-            pair.first.insert(0, confpair.first);
             for(auto& endpoint : m_endpoints)
-              valueUpdate(endpoint.second, pair.first, pair.second); // invoke value update
-          }
+              valueUpdate(endpoint.second, confpair.first, pair.first, pair.second); // invoke value update
         }
         else
           posix::syslog << posix::priority::warning << "Failed to read/parse config file: " << filename << posix::eom;
@@ -159,97 +153,73 @@ void ExecutorConfigServer::fullUpdateCall(posix::fd_t socket) noexcept
     std::list<std::pair<std::string, std::string>> data;
     confpair.second.config.exportKeyPairs(data); // export config data
     for(auto& pair : data) // for each key pair
-    {
-      pair.first.insert(0, confpair.first); // prepend file path
-      valueUpdate(socket, pair.first, pair.second); // send value
-    }
+      valueUpdate(socket, confpair.first, pair.first, pair.second); // send value
   }
   fullUpdateReturn(socket, posix::success_response); // send call response
 }
 
-void ExecutorConfigServer::setCall(posix::fd_t socket, std::string& key, std::string& value) noexcept
+void ExecutorConfigServer::setCall(posix::fd_t socket, const std::string& config, const std::string& key, const std::string& value) noexcept
 {
   posix::error_t errcode = posix::success_response;
-  std::string::size_type slashpos = key.find('/');
-  if(slashpos == std::string::npos || // if not found OR
-     !slashpos || // if first character OR
-     slashpos == key.length()) // if last character
-    errcode = int(std::errc::invalid_argument); // not a valid key!
+
+  auto configfile = m_configfiles.find(config);
+  if(configfile == m_configfiles.end())
+    errcode = int(std::errc::invalid_argument); // not a valid config file name
   else
-  {
-    auto configfile = m_configfiles.find(key.substr(0, slashpos - 1));
-    if(configfile == m_configfiles.end())
-      errcode = int(std::errc::invalid_argument); // not a valid config file name
-    else
-      configfile->second.config.getNode(key.substr(slashpos, std::string::npos))->value = value;
-  }
-  setReturn(socket, errcode);
+    configfile->second.config.getNode(key)->value = value;
+
+  setReturn(socket, errcode, config, key);
 }
 
-void ExecutorConfigServer::getCall(posix::fd_t socket, std::string& key) noexcept
+void ExecutorConfigServer::getCall(posix::fd_t socket, const std::string& config, const std::string& key) noexcept
 {
   std::vector<std::string> children;
   std::string value;
   posix::error_t errcode = posix::success_response;
-  std::string::size_type slashpos = key.find('/');
-  if(slashpos == std::string::npos || // if not found OR
-     !slashpos || // if first character OR
-     slashpos == key.length()) // if last character
-    errcode = int(std::errc::invalid_argument); // not a valid key!
+
+  auto configfile = m_configfiles.find(config); // look up config by name
+  if(configfile == m_configfiles.end()) // if not found
+    errcode = int(std::errc::invalid_argument); // not a valid config file name
   else
   {
-    auto configfile = m_configfiles.find(key.substr(0, slashpos - 1));
-    if(configfile == m_configfiles.end())
-      errcode = int(std::errc::invalid_argument); // not a valid config file name
+    auto node = configfile->second.config.findNode(key); // find node in config file
+    if(node == nullptr)
+      errcode = posix::error_t(std::errc::invalid_argument); // doesn't exist
     else
     {
-      auto node = configfile->second.config.findNode(key);
-      if(node == nullptr)
-        errcode = int(std::errc::invalid_argument); // doesn't exist
-      else
+      switch(node->type)
       {
-        switch(node->type)
-        {
-          case node_t::type_e::array:
-          case node_t::type_e::multisection:
-          case node_t::type_e::section:
-            for(const auto& child : node->children)
-              children.push_back(child.first);
-          case node_t::type_e::invalid:
-          case node_t::type_e::value:
-          case node_t::type_e::string:
-            value = node->value;
-        }
+        case node_t::type_e::array:
+        case node_t::type_e::multisection:
+        case node_t::type_e::section:
+          for(const auto& child : node->children)
+            children.push_back(child.first);
+        case node_t::type_e::invalid:
+        case node_t::type_e::value:
+        case node_t::type_e::string:
+          value = node->value;
       }
     }
   }
-  getReturn(socket, errcode, value, children);
+  getReturn(socket, errcode, config, key, value, children);
 }
 
-void ExecutorConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
+void ExecutorConfigServer::unsetCall(posix::fd_t socket, const std::string& config, const std::string& key) noexcept
 {
   posix::error_t errcode = posix::success_response;
-  std::string::size_type slashpos = key.find('/');
-  if(slashpos == std::string::npos || // if not found OR
-     !slashpos || // if first character OR
-     slashpos == key.length()) // if last character
-    errcode = int(std::errc::invalid_argument); // not a valid key!
+  auto configfile = m_configfiles.find(config); // look up config by name
+  if(configfile == m_configfiles.end()) // if not found
+    errcode = posix::error_t(std::errc::invalid_argument); // not a valid config file name
   else
   {
-    auto configfile = m_configfiles.find(key.substr(0, slashpos - 1));
-    if(configfile == m_configfiles.end())
-      errcode = int(std::errc::invalid_argument); // not a valid config file name
+    std::string::size_type offset = key.rfind('/');
+    auto node = configfile->second.config.findNode(key.substr(0, offset)); // look for parent node
+    if(node == nullptr)
+      errcode = posix::error_t(std::errc::invalid_argument); // doesn't exist
     else
-    {
-      std::string::size_type offset = key.rfind('/');
-      auto node = configfile->second.config.findNode(key.substr(slashpos, offset - slashpos)); // look for parent node
-      if(node == nullptr)
-        errcode = int(std::errc::invalid_argument); // doesn't exist
-      else
-        node->children.erase(key.substr(offset + 1)); // erase child node if it exists
-    }
+      node->children.erase(key); // erase child node if it exists
   }
-  unsetReturn(socket, errcode);
+  unsetReturn(socket, errcode, config, key);
 }
 
 bool ExecutorConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept
@@ -286,7 +256,7 @@ void ExecutorConfigServer::request(posix::fd_t socket, posix::sockaddr_t addr, p
 void ExecutorConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept
 {
   (void)fd;
-  std::string key, value;
+  std::string config, key, value;
   if(!(buffer >> value).hadError() && value == "RPC" &&
      !(buffer >> value).hadError())
   {
@@ -299,19 +269,19 @@ void ExecutorConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t
         fullUpdateCall(socket);
         break;
       case "setCall"_hash:
-        buffer >> key >> value;
+        buffer >> config >> key >> value;
         if(!buffer.hadError())
-          setCall(socket, key, value);
+          setCall(socket, config, key, value);
         break;
       case "getCall"_hash:
-        buffer >> key;
+        buffer >> config >> key;
         if(!buffer.hadError())
-          getCall(socket, key);
+          getCall(socket, config, key);
         break;
       case "unsetCall"_hash:
-        buffer >> key;
+        buffer >> config >> key;
         if(!buffer.hadError())
-          unsetCall(socket, key);
+          unsetCall(socket, config, key);
         break;
     }
   }
