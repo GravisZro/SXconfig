@@ -66,18 +66,18 @@ ConfigServer::~ConfigServer(void) noexcept
 {
 }
 
-void ConfigServer::setCall(posix::fd_t socket, std::string& key, std::string& value) noexcept
+void ConfigServer::setCall(posix::fd_t socket, const std::string& key, const std::string& value) noexcept
 {
   posix::error_t errcode = posix::success_response;
   auto configfile = m_configfiles.find(socket);
   if(configfile == m_configfiles.end())
-    errcode = int(std::errc::io_error); // not a valid key!
+    errcode = posix::error_t(std::errc::io_error); // not a valid key!
   else
     configfile->second.config.getNode(key)->value = value;
   setReturn(socket, errcode);
 }
 
-void ConfigServer::getCall(posix::fd_t socket, std::string& key) noexcept
+void ConfigServer::getCall(posix::fd_t socket, const std::string& key) noexcept
 {
   posix::error_t errcode = posix::success_response;
   std::list<std::string> children;
@@ -111,7 +111,7 @@ void ConfigServer::getCall(posix::fd_t socket, std::string& key) noexcept
   getReturn(socket, errcode, value, children);
 }
 
-void ConfigServer::unsetCall(posix::fd_t socket, std::string& key) noexcept
+void ConfigServer::unsetCall(posix::fd_t socket, const std::string& key) noexcept
 {
   posix::error_t errcode = posix::success_response;
   auto configfile = m_configfiles.find(socket);
