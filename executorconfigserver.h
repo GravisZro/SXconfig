@@ -20,12 +20,12 @@ public:
   ExecutorConfigServer(void) noexcept;
  ~ExecutorConfigServer(void) noexcept;
 
-  bool valueUpdate(const posix::fd_t socket, const std::string& config, const std::string& key, const std::string& value) const noexcept;
+  bool valueSet(const posix::fd_t socket, const std::string& config, const std::string& key, const std::string& value) const noexcept;
   bool valueUnset (const posix::fd_t socket, const std::string& config, const std::string& key) const noexcept;
 
 private:
   bool listConfigsReturn(const posix::fd_t socket, const std::vector<std::string>& names) const noexcept;
-  bool fullUpdateReturn (const posix::fd_t socket, const posix::error_t errcode) const noexcept;
+  bool syncReturn (const posix::fd_t socket, const posix::error_t errcode) const noexcept;
 
   bool setReturn        (const posix::fd_t socket, const posix::error_t errcode, const std::string& config, const std::string& key) const noexcept;
   bool unsetReturn      (const posix::fd_t socket, const posix::error_t errcode, const std::string& config, const std::string& key) const noexcept;
@@ -33,7 +33,7 @@ private:
                          const std::string& value, const std::vector<std::string>& children) const noexcept;
 
   void listConfigsCall(posix::fd_t socket) noexcept;
-  void fullUpdateCall (posix::fd_t socket) noexcept;
+  void syncCall (posix::fd_t socket) noexcept;
   void setCall        (posix::fd_t socket, const std::string& config, const std::string& key, const std::string& value) noexcept;
   void unsetCall      (posix::fd_t socket, const std::string& config, const std::string& key) noexcept;
   void getCall        (posix::fd_t socket, const std::string& config, const std::string& key) noexcept;
@@ -59,11 +59,11 @@ private:
 inline bool ExecutorConfigServer::listConfigsReturn(const posix::fd_t socket, const std::vector<std::string>& names) const noexcept
   { return write(socket, vfifo("RPC", "listConfigsReturn", names), posix::invalid_descriptor); }
 
-inline bool ExecutorConfigServer::fullUpdateReturn(const posix::fd_t socket, const posix::error_t errcode) const noexcept
-  { return write(socket, vfifo("RPC", "fullUpdateReturn", errcode), posix::invalid_descriptor); }
+inline bool ExecutorConfigServer::syncReturn(const posix::fd_t socket, const posix::error_t errcode) const noexcept
+  { return write(socket, vfifo("RPC", "syncReturn", errcode), posix::invalid_descriptor); }
 
-inline bool ExecutorConfigServer::valueUpdate(const posix::fd_t socket, const std::string& config, const std::string& key, const std::string& value) const noexcept
-  { return write(socket, vfifo("RPC", "valueUpdate", config, key, value), posix::invalid_descriptor); }
+inline bool ExecutorConfigServer::valueSet(const posix::fd_t socket, const std::string& config, const std::string& key, const std::string& value) const noexcept
+  { return write(socket, vfifo("RPC", "valueSet", config, key, value), posix::invalid_descriptor); }
 
 inline bool ExecutorConfigServer::valueUnset(const posix::fd_t socket, const std::string& config, const std::string& key) const noexcept
   { return write(socket, vfifo("RPC", "valueUnset", config, key), posix::invalid_descriptor); }

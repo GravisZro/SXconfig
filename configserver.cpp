@@ -124,7 +124,7 @@ void ConfigServer::unsetCall(posix::fd_t socket, const std::string& key) noexcep
   unsetReturn(socket, errcode);
 }
 
-void ConfigServer::fullUpdateCall(posix::fd_t socket) noexcept
+void ConfigServer::syncCall(posix::fd_t socket) noexcept
 {
   const auto& confpair = m_configfiles.find(socket); // find parsed config file
   if(confpair != m_configfiles.end())
@@ -132,9 +132,9 @@ void ConfigServer::fullUpdateCall(posix::fd_t socket) noexcept
     std::unordered_map<std::string, std::string> data;
     confpair->second.config.exportKeyPairs(data); // export config data
     for(const auto& pair : data) // for each key pair
-      valueUpdate(socket, pair.first, pair.second); // send value
+      valueSet(socket, pair.first, pair.second); // send value
   }
-  fullUpdateReturn(socket, posix::success_response); // send call response
+  syncReturn(socket, posix::success_response); // send call response
 }
 
 bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept
@@ -196,12 +196,12 @@ void ConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) n
             if(iter == new_config.end())
               valueUnset(socket, old_pair.first); // invoke value deletion
             else if(iter->second != old_pair.second)
-              valueUpdate(socket, iter->first, iter->second); // invoke value update
+              valueSet(socket, iter->first, iter->second); // invoke value update
           }
 
           for(auto& new_pair : new_config) // find completely new values
             if(old_config.find(new_pair.first) == old_config.end()) // if old config doesn't have a new config key
-              valueUpdate(socket, new_pair.first, new_pair.second); // invoke value update
+              valueSet(socket, new_pair.first, new_pair.second); // invoke value update
         }
         else
           posix::syslog << posix::priority::warning << "Failed to read/parse config file: " << filename << posix::eom;
@@ -239,8 +239,8 @@ void ConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noe
   {
     switch(hash(value))
     {
-      case "fullUpdateCall"_hash:
-        fullUpdateCall(socket);
+      case "syncCall"_hash:
+        syncCall(socket);
         break;
       case "setCall"_hash:
         buffer >> key >> value;

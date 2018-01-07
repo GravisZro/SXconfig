@@ -119,13 +119,13 @@ void ExecutorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t 
                 valueUnset(endpoint.second, confpair.first, old_pair.first); // invoke value deletion
             else if(iter->second != old_pair.second)
               for(auto& endpoint : m_endpoints)
-                valueUpdate(endpoint.second, confpair.first, iter->first, iter->second); // invoke value update
+                valueSet(endpoint.second, confpair.first, iter->first, iter->second); // invoke value update
           }
 
           for(auto& new_pair : new_config) // find completely new values
             if(old_config.find(new_pair.first) == old_config.end()) // if old config doesn't have a new config key
               for(auto& endpoint : m_endpoints)
-                valueUpdate(endpoint.second, confpair.first, new_pair.first, new_pair.second); // invoke value update
+                valueSet(endpoint.second, confpair.first, new_pair.first, new_pair.second); // invoke value update
         }
         else
           posix::syslog << posix::priority::warning << "Failed to read/parse config file: " << filename << posix::eom;
@@ -145,16 +145,16 @@ void ExecutorConfigServer::listConfigsCall(posix::fd_t socket) noexcept
   listConfigsReturn(socket, names);
 }
 
-void ExecutorConfigServer::fullUpdateCall(posix::fd_t socket) noexcept
+void ExecutorConfigServer::syncCall(posix::fd_t socket) noexcept
 {
   for(const auto& confpair : m_configfiles) // for each parsed config file
   {
     std::unordered_map<std::string, std::string> data;
     confpair.second.config.exportKeyPairs(data); // export config data
     for(auto& pair : data) // for each key pair
-      valueUpdate(socket, confpair.first, pair.first, pair.second); // send value
+      valueSet(socket, confpair.first, pair.first, pair.second); // send value
   }
-  fullUpdateReturn(socket, posix::success_response); // send call response
+  syncReturn(socket, posix::success_response); // send call response
 }
 
 void ExecutorConfigServer::setCall(posix::fd_t socket, const std::string& config, const std::string& key, const std::string& value) noexcept
@@ -259,8 +259,8 @@ void ExecutorConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t
       case "listConfigsCall"_hash:
         listConfigsCall(socket);
         break;
-      case "fullUpdateCall"_hash:
-        fullUpdateCall(socket);
+      case "syncCall"_hash:
+        syncCall(socket);
         break;
       case "setCall"_hash:
         buffer >> config >> key >> value;
