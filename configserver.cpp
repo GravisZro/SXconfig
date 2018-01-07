@@ -33,18 +33,18 @@ static const char* configfilename(const char* base)
   return name;
 }
 
-static bool readconfig(const char* base, std::string& buffer)
+static bool readconfig(const char* name, std::string& buffer)
 {
-  const char* name = configfilename(base);
   std::FILE* file = std::fopen(name, "a+b");
 
   if(file == nullptr)
   {
-    posix::syslog << "unable to open file: " << name << " : " << std::strerror(errno) << posix::eom;
+    posix::syslog << posix::priority::warning << "Unable to open file: " << name << " : " << std::strerror(errno) << posix::eom;
     return false;
   }
 
-  buffer.resize(std::ftell(file), '\n');
+  buffer.clear();
+  buffer.resize(posix::size_t(std::ftell(file)), '\n');
   if(buffer.size())
   {
     std::rewind(file);
@@ -118,15 +118,8 @@ void ConfigServer::unsetCall(posix::fd_t socket, const std::string& key) noexcep
 
   if(configfile == m_configfiles.end())
     errcode = posix::error_t(std::errc::io_error); // no such config file!
-  else
-  {
-    posix::size_t offset = key.find_last_of('/');
-    auto node = configfile->second.config.findNode(key.substr(0, offset)); // look for parent node
-    if(node == nullptr)
-      errcode = posix::error_t(std::errc::invalid_argument);
-    else
-      node->children.erase(key.substr(offset + 1)); // erase child node if it exists
-  }
+  else if(!configfile->second.config.deleteNode(key))
+    errcode = posix::error_t(std::errc::invalid_argument); // doesn't exist
 
   unsetReturn(socket, errcode);
 }
@@ -136,7 +129,7 @@ void ConfigServer::fullUpdateCall(posix::fd_t socket) noexcept
   const auto& confpair = m_configfiles.find(socket); // find parsed config file
   if(confpair != m_configfiles.end())
   {
-    std::list<std::pair<std::string, std::string>> data;
+    std::unordered_map<std::string, std::string> data;
     confpair->second.config.exportKeyPairs(data); // export config data
     for(const auto& pair : data) // for each key pair
       valueUpdate(socket, pair.first, pair.second); // send value
@@ -150,7 +143,7 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
     return false;
 
   process_state_t state;
-  if(::procstat(cred.pid, &state) == posix::error_response) // get state information about the connecting process
+  if(::procstat(cred.pid, state) == posix::error_response) // get state information about the connecting process
     return false; // unable to get state
 
   auto endpoint = m_endpoints.find(cred.pid);
@@ -185,31 +178,30 @@ void ConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) n
       if(!std::strcmp(confpair.second.fevent->file(), filename))
       {
         std::string tmp_buffer;
-        std::list<std::pair<std::string, std::string>> old_config, new_values, removed_values;
+        std::unordered_map<std::string, std::string> old_config, new_config;
 
         confpair.second.config.exportKeyPairs(old_config); // export data
         confpair.second.config.clear(); // wipe config
 
         socket = confpair.first;
-        removed_values = old_config;
 
         if(readconfig(filename, tmp_buffer) &&
            confpair.second.config.importText(tmp_buffer))
         {
-          confpair.second.config.exportKeyPairs(new_values);
+          confpair.second.config.exportKeyPairs(new_config);
 
-          for(auto& pair : new_values)
-            std::remove_if(removed_values.begin(), removed_values.end(), // remove matching keys (leaving deleted key/value pairs)
-                           [pair](const auto& value) { return value.first == pair.first; });
+          for(auto& old_pair : old_config) // find removed and updated values
+          {
+            auto iter = new_config.find(old_pair.first);
+            if(iter == new_config.end())
+              valueUnset(socket, old_pair.first); // invoke value deletion
+            else if(iter->second != old_pair.second)
+              valueUpdate(socket, iter->first, iter->second); // invoke value update
+          }
 
-          for(auto& pair : old_config)
-            new_values.remove(pair); // remove identical values (leaving only new key/value pairs)
-
-          for(auto& pair : removed_values)
-            valueUnset(socket, pair.first); // invoke value deletion
-
-          for(auto& pair : new_values)
-            valueUpdate(socket, pair.first, pair.second); // invoke value update
+          for(auto& new_pair : new_config) // find completely new values
+            if(old_config.find(new_pair.first) == old_config.end()) // if old config doesn't have a new config key
+              valueUpdate(socket, new_pair.first, new_pair.second); // invoke value update
         }
         else
           posix::syslog << posix::priority::warning << "Failed to read/parse config file: " << filename << posix::eom;
@@ -225,7 +217,7 @@ void ConfigServer::removePeer(posix::fd_t socket) noexcept
 
     for(auto endpoint : m_endpoints)
       if(socket == endpoint.second)
-      { m_endpoints.erase(endpoint.first); break; }
+        { m_endpoints.erase(endpoint.first); break; }
   }
 }
 
@@ -247,6 +239,9 @@ void ConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noe
   {
     switch(hash(value))
     {
+      case "fullUpdateCall"_hash:
+        fullUpdateCall(socket);
+        break;
       case "setCall"_hash:
         buffer >> key >> value;
         if(!buffer.hadError())
