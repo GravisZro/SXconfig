@@ -74,7 +74,7 @@ void ConfigServer::setCall(posix::fd_t socket, const std::string& key, const std
     errcode = posix::error_t(std::errc::io_error); // not a valid key!
   else
     configfile->second.config.getNode(key)->value = value;
-  setReturn(socket, errcode);
+  setReturn(socket, errcode, key);
 }
 
 void ConfigServer::getCall(posix::fd_t socket, const std::string& key) noexcept
@@ -108,7 +108,7 @@ void ConfigServer::getCall(posix::fd_t socket, const std::string& key) noexcept
       }
     }
   }
-  getReturn(socket, errcode, value, children);
+  getReturn(socket, errcode, key, value, children);
 }
 
 void ConfigServer::unsetCall(posix::fd_t socket, const std::string& key) noexcept
@@ -121,7 +121,7 @@ void ConfigServer::unsetCall(posix::fd_t socket, const std::string& key) noexcep
   else if(!configfile->second.config.deleteNode(key))
     errcode = posix::error_t(std::errc::invalid_argument); // doesn't exist
 
-  unsetReturn(socket, errcode);
+  unsetReturn(socket, errcode, key);
 }
 
 void ConfigServer::syncCall(posix::fd_t socket) noexcept
