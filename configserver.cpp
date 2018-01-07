@@ -126,15 +126,16 @@ void ConfigServer::unsetCall(posix::fd_t socket, const std::string& key) noexcep
 
 void ConfigServer::syncCall(posix::fd_t socket) noexcept
 {
+  bool ok = true;
   const auto& confpair = m_configfiles.find(socket); // find parsed config file
   if(confpair != m_configfiles.end())
   {
     std::unordered_map<std::string, std::string> data;
     confpair->second.config.exportKeyPairs(data); // export config data
     for(const auto& pair : data) // for each key pair
-      valueSet(socket, pair.first, pair.second); // send value
+      ok &= valueSet(socket, pair.first, pair.second); // send value
   }
-  syncReturn(socket, posix::success_response); // send call response
+  syncReturn(socket, ok ? posix::success_response : errno); // send call response
 }
 
 bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept

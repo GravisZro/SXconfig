@@ -147,14 +147,15 @@ void ExecutorConfigServer::listConfigsCall(posix::fd_t socket) noexcept
 
 void ExecutorConfigServer::syncCall(posix::fd_t socket) noexcept
 {
+  bool ok = true;
   for(const auto& confpair : m_configfiles) // for each parsed config file
   {
     std::unordered_map<std::string, std::string> data;
     confpair.second.config.exportKeyPairs(data); // export config data
     for(auto& pair : data) // for each key pair
-      valueSet(socket, confpair.first, pair.first, pair.second); // send value
+      ok &= valueSet(socket, confpair.first, pair.first, pair.second); // send value
   }
-  syncReturn(socket, posix::success_response); // send call response
+  syncReturn(socket, ok ? posix::success_response : errno); // send call response
 }
 
 void ExecutorConfigServer::setCall(posix::fd_t socket, const std::string& config, const std::string& key, const std::string& value) noexcept

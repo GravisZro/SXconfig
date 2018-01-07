@@ -22,17 +22,17 @@ public:
  ~ConfigServer(void) noexcept;
 
 private:
-  bool valueSet      (const posix::fd_t socket, const std::string& key, const std::string& value) const noexcept;
-  bool valueUnset       (const posix::fd_t socket, const std::string& key) const noexcept;
+  bool valueSet   (const posix::fd_t socket, const std::string& key, const std::string& value) const noexcept;
+  bool valueUnset (const posix::fd_t socket, const std::string& key) const noexcept;
   bool syncReturn (const posix::fd_t socket, const posix::error_t errcode) const noexcept;
-  bool unsetReturn      (const posix::fd_t socket, const posix::error_t errcode) const noexcept;
-  bool setReturn        (const posix::fd_t socket, const posix::error_t errcode) const noexcept;
-  bool getReturn        (const posix::fd_t socket, const posix::error_t errcode, const std::string& value, const std::list<std::string>& children) const noexcept;
+  bool unsetReturn(const posix::fd_t socket, const posix::error_t errcode) const noexcept;
+  bool setReturn  (const posix::fd_t socket, const posix::error_t errcode) const noexcept;
+  bool getReturn  (const posix::fd_t socket, const posix::error_t errcode, const std::string& value, const std::list<std::string>& children) const noexcept;
 
-  void syncCall (posix::fd_t socket) noexcept;
-  void unsetCall      (posix::fd_t socket, const std::string& key) noexcept;
-  void setCall        (posix::fd_t socket, const std::string& key, const std::string& value) noexcept;
-  void getCall        (posix::fd_t socket, const std::string& key) noexcept;
+  void syncCall   (posix::fd_t socket) noexcept;
+  void unsetCall  (posix::fd_t socket, const std::string& key) noexcept;
+  void setCall    (posix::fd_t socket, const std::string& key, const std::string& value) noexcept;
+  void getCall    (posix::fd_t socket, const std::string& key) noexcept;
 
   bool peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept;
   void receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept;
