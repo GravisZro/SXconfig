@@ -1,7 +1,6 @@
 ﻿#include "executorconfigserver.h"
 
 // POSIX
-#include <fcntl.h>
 #include <dirent.h>
 
 // POSIX++

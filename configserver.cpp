@@ -1,8 +1,5 @@
 #include "configserver.h"
 
-// POSIX
-#include <fcntl.h>
-
 // POSIX++
 #include <cstdio>
 #include <climits>
