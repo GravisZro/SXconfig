@@ -2,10 +2,10 @@
 #define CONFIGSERVER_H
 
 // STL
+#include <memory>
 #include <list>
 #include <string>
 #include <unordered_map>
-#include <memory>
 
 // PDTK
 #include <socket.h>

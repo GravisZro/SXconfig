@@ -5,7 +5,6 @@
 #include <climits>
 
 // STL
-#include <memory>
 #include <algorithm>
 
 // PDTK
