@@ -23,14 +23,28 @@
 #define EXECUTOR_USERNAME     "executor"
 #endif
 
-static const char* executor_configfilename(const char* base)
+static const char* extract_daemon_name(const char* filename)
+{
+  char daemon[NAME_MAX];
+  const char* start = std::strrchr(filename, '/');
+  const char* end   = std::strrchr(filename, '.');
+
+  if(start == nullptr || // if '/' NOT found OR
+     end   == nullptr || // '.' found AND
+     end < start || // occur in the incorrect order OR
+     std::strcmp(end, ".conf")) // doesn't end with ".conf"
+    return nullptr;
+  return std::strncpy(daemon, start + 1, posix::size_t(end - start + 1)); // extract daemon name
+}
+
+static const char* executor_configfilename(const char* filename)
 {
   // construct config filename
-  static char name[PATH_MAX];
-  std::memset(name, 0, PATH_MAX);
-  if(std::snprintf(name, PATH_MAX, "%s/%s.conf", EXECUTOR_CONFIG_PATH, base) == posix::error_response) // I don't how this could fail
+  static char fullpath[PATH_MAX];
+  std::memset(fullpath, 0, PATH_MAX);
+  if(std::snprintf(fullpath, PATH_MAX, "%s/%s", EXECUTOR_CONFIG_PATH, filename) == posix::error_response) // I don't how this could fail
     return nullptr; // unable to build config filename
-  return name;
+  return fullpath;
 }
 
 static bool readconfig(const char* name, std::string& buffer)
@@ -60,17 +74,23 @@ ExecutorConfigServer::ExecutorConfigServer(void) noexcept
   std::string buffer;
   DIR* dir = ::opendir(EXECUTOR_CONFIG_PATH);
   dirent* entry = nullptr;
-  char base[NAME_MAX];
+  const char* daemon = nullptr;
+  const char* filename = nullptr;
   if(dir != nullptr)
   {
     while((entry = ::readdir(dir)) != nullptr)
     {
-      std::memset(base, 0, NAME_MAX);
-      if(std::sscanf(entry->d_name, "%s.conf", base) == posix::success_response && // if filename base extracted properly AND
-         readconfig(executor_configfilename(base), buffer)) // able to read config file
+      if(entry->d_name[0] == '.') // if dot files/dirs
+        continue; // skip file
+
+      if((daemon   = extract_daemon_name    (entry->d_name)) == nullptr || // if daemon name extraction failed OR
+         (filename = executor_configfilename(entry->d_name)) == nullptr) // failed to build filename
+        continue; // skip file
+
+      if(readconfig(filename, buffer)) // able to read config file
       {
-        auto& conffile = m_configfiles[base];
-        conffile.fevent = std::make_unique<FileEvent>(entry->d_name, FileEvent::WriteEvent);
+        auto& conffile = m_configfiles[daemon];
+        conffile.fevent = std::make_unique<FileEvent>(filename, FileEvent::WriteEvent);
         conffile.config.clear(); // erase any existing data
         conffile.config.importText(buffer);
         Object::connect(conffile.fevent->activated, this, &ExecutorConfigServer::fileUpdated);
@@ -94,9 +114,11 @@ ExecutorConfigServer::~ExecutorConfigServer(void) noexcept
 
 void ExecutorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept
 {
-  if(flags.WriteEvent)
+  const char* daemon = nullptr;
+  if(flags.WriteEvent &&
+     (daemon = extract_daemon_name(filename)) != nullptr) // extracted daemon name
     for(auto& confpair : m_configfiles)
-      if(!std::strcmp(confpair.second.fevent->file(), filename))
+      if(!std::strcmp(confpair.second.fevent->file(), daemon))
       {
         std::string tmp_buffer;
         std::unordered_map<std::string, std::string> old_config, new_config;
