@@ -3,8 +3,8 @@
 // PDTK
 #include <cxxutils/syslogstream.h>
 
-#ifndef MCFS_PATH
-#define MCFS_PATH               "/mc"
+#ifndef SCFS_PATH
+#define SCFS_PATH               "/svc"
 #endif
 
 #ifndef CONFIG_USERNAME
@@ -17,11 +17,11 @@
 #define ANONYMOUS_SOCKET        "\0"
 
 #ifndef CONFIG_IO_SOCKET
-#define CONFIG_IO_SOCKET        MCFS_PATH "/" CONFIG_USERNAME "/io"
+#define CONFIG_IO_SOCKET        SCFS_PATH "/" CONFIG_USERNAME "/io"
 #endif
 
 #ifndef CONFIG_DIRECTOR_SOCKET
-#define CONFIG_DIRECTOR_SOCKET  MCFS_PATH "/" CONFIG_USERNAME "/director"
+#define CONFIG_DIRECTOR_SOCKET  SCFS_PATH "/" CONFIG_USERNAME "/director"
 #endif
 
 ConfigCore::ConfigCore(void)
