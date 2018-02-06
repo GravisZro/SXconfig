@@ -36,7 +36,7 @@ TARGET        = sxconfig
 SOURCES       = main.cpp \
 		configcore.cpp \
 		configserver.cpp \
-		executorconfigserver.cpp \
+		directorconfigserver.cpp \
 		$(PDTK)/application.cpp \
 		$(PDTK)/socket.cpp \
 		$(PDTK)/cxxutils/configmanip.cpp \
