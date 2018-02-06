@@ -1,4 +1,4 @@
-﻿#include "executorconfigserver.h"
+﻿#include "directorconfigserver.h"
 
 // POSIX
 #include <dirent.h>
@@ -15,12 +15,12 @@
 #include <specialized/procstat.h>
 
 
-#ifndef EXECUTOR_CONFIG_PATH
-#define EXECUTOR_CONFIG_PATH  "/etc/executor"
+#ifndef DIRECTOR_CONFIG_PATH
+#define DIRECTOR_CONFIG_PATH  "/etc/director"
 #endif
 
-#ifndef EXECUTOR_USERNAME
-#define EXECUTOR_USERNAME     "executor"
+#ifndef DIRECTOR_USERNAME
+#define DIRECTOR_USERNAME     "director"
 #endif
 
 static const char* extract_daemon_name(const char* filename)
@@ -37,12 +37,12 @@ static const char* extract_daemon_name(const char* filename)
   return std::strncpy(daemon, start + 1, posix::size_t(end - start + 1)); // extract daemon name
 }
 
-static const char* executor_configfilename(const char* filename)
+static const char* director_configfilename(const char* filename)
 {
   // construct config filename
   static char fullpath[PATH_MAX];
   std::memset(fullpath, 0, PATH_MAX);
-  if(std::snprintf(fullpath, PATH_MAX, "%s/%s", EXECUTOR_CONFIG_PATH, filename) == posix::error_response) // I don't how this could fail
+  if(std::snprintf(fullpath, PATH_MAX, "%s/%s", DIRECTOR_CONFIG_PATH, filename) == posix::error_response) // I don't how this could fail
     return nullptr; // unable to build config filename
   return fullpath;
 }
@@ -69,10 +69,10 @@ static bool readconfig(const char* name, std::string& buffer)
 }
 
 
-ExecutorConfigServer::ExecutorConfigServer(void) noexcept
+DirectorConfigServer::DirectorConfigServer(void) noexcept
 {
   std::string buffer;
-  DIR* dir = ::opendir(EXECUTOR_CONFIG_PATH);
+  DIR* dir = ::opendir(DIRECTOR_CONFIG_PATH);
   dirent* entry = nullptr;
   const char* daemon = nullptr;
   const char* filename = nullptr;
@@ -84,7 +84,7 @@ ExecutorConfigServer::ExecutorConfigServer(void) noexcept
         continue; // skip file
 
       if((daemon   = extract_daemon_name    (entry->d_name)) == nullptr || // if daemon name extraction failed OR
-         (filename = executor_configfilename(entry->d_name)) == nullptr) // failed to build filename
+         (filename = director_configfilename(entry->d_name)) == nullptr) // failed to build filename
         continue; // skip file
 
       if(readconfig(filename, buffer)) // able to read config file
@@ -93,26 +93,26 @@ ExecutorConfigServer::ExecutorConfigServer(void) noexcept
         conffile.fevent = std::make_unique<FileEvent>(filename, FileEvent::WriteEvent);
         conffile.config.clear(); // erase any existing data
         conffile.config.importText(buffer);
-        Object::connect(conffile.fevent->activated, this, &ExecutorConfigServer::fileUpdated);
+        Object::connect(conffile.fevent->activated, this, &DirectorConfigServer::fileUpdated);
       }
     }
     ::closedir(dir);
   }
 /*
-  m_dir = EventBackend::watch(EXECUTOR_CONFIG_PATH, EventFlags::DirEvent);
+  m_dir = EventBackend::watch(DIRECTOR_CONFIG_PATH, EventFlags::DirEvent);
   if(m_dir > 0)
-    Object::connect(m_dir, this, &ExecutorConfigServer::dirUpdated);
+    Object::connect(m_dir, this, &DirectorConfigServer::dirUpdated);
 */
-  Object::connect(newPeerRequest  , this, &ExecutorConfigServer::request);
-  Object::connect(newPeerMessage  , this, &ExecutorConfigServer::receive);
-  Object::connect(disconnectedPeer, this, &ExecutorConfigServer::removePeer);
+  Object::connect(newPeerRequest  , this, &DirectorConfigServer::request);
+  Object::connect(newPeerMessage  , this, &DirectorConfigServer::receive);
+  Object::connect(disconnectedPeer, this, &DirectorConfigServer::removePeer);
 }
 
-ExecutorConfigServer::~ExecutorConfigServer(void) noexcept
+DirectorConfigServer::~DirectorConfigServer(void) noexcept
 {
 }
 
-void ExecutorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept
+void DirectorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept
 {
   const char* daemon = nullptr;
   if(flags.WriteEvent &&
@@ -152,12 +152,12 @@ void ExecutorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t 
       }
 }
 
-void ExecutorConfigServer::dirUpdated(const char* dirname, FileEvent::Flags_t flags) noexcept
+void DirectorConfigServer::dirUpdated(const char* dirname, FileEvent::Flags_t flags) noexcept
 {
   std::printf("dir updated: %s - 0x%02x\n", dirname, uint8_t(flags));
 }
 
-void ExecutorConfigServer::listConfigsCall(posix::fd_t socket) noexcept
+void DirectorConfigServer::listConfigsCall(posix::fd_t socket) noexcept
 {
   std::vector<std::string> names;
   for(const auto& confpair : m_configfiles)
@@ -165,7 +165,7 @@ void ExecutorConfigServer::listConfigsCall(posix::fd_t socket) noexcept
   listConfigsReturn(socket, names);
 }
 
-void ExecutorConfigServer::syncCall(posix::fd_t socket) noexcept
+void DirectorConfigServer::syncCall(posix::fd_t socket) noexcept
 {
   bool ok = true;
   for(const auto& confpair : m_configfiles) // for each parsed config file
@@ -178,7 +178,7 @@ void ExecutorConfigServer::syncCall(posix::fd_t socket) noexcept
   syncReturn(socket, ok ? posix::success_response : errno); // send call response
 }
 
-void ExecutorConfigServer::setCall(posix::fd_t socket, const std::string& config, const std::string& key, const std::string& value) noexcept
+void DirectorConfigServer::setCall(posix::fd_t socket, const std::string& config, const std::string& key, const std::string& value) noexcept
 {
   posix::error_t errcode = posix::success_response;
 
@@ -191,7 +191,7 @@ void ExecutorConfigServer::setCall(posix::fd_t socket, const std::string& config
   setReturn(socket, errcode, config, key);
 }
 
-void ExecutorConfigServer::getCall(posix::fd_t socket, const std::string& config, const std::string& key) noexcept
+void DirectorConfigServer::getCall(posix::fd_t socket, const std::string& config, const std::string& key) noexcept
 {
   std::vector<std::string> children;
   std::string value;
@@ -224,7 +224,7 @@ void ExecutorConfigServer::getCall(posix::fd_t socket, const std::string& config
   getReturn(socket, errcode, config, key, value, children);
 }
 
-void ExecutorConfigServer::unsetCall(posix::fd_t socket, const std::string& config, const std::string& key) noexcept
+void DirectorConfigServer::unsetCall(posix::fd_t socket, const std::string& config, const std::string& key) noexcept
 {
   posix::error_t errcode = posix::success_response;
   auto configfile = m_configfiles.find(config); // look up config by name
@@ -237,9 +237,9 @@ void ExecutorConfigServer::unsetCall(posix::fd_t socket, const std::string& conf
   unsetReturn(socket, errcode, config, key);
 }
 
-bool ExecutorConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept
+bool DirectorConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept
 {
-  if(std::strcmp(EXECUTOR_USERNAME, posix::getusername(cred.uid))) // username must be "executor"
+  if(std::strcmp(DIRECTOR_USERNAME, posix::getusername(cred.uid))) // username must be "director"
     return false; // didn't match, reject connection
 
   auto endpoint = m_endpoints.find(cred.pid);
@@ -252,14 +252,14 @@ bool ExecutorConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cre
   return false; // reject multiple connections from one endpoint
 }
 
-void ExecutorConfigServer::removePeer(posix::fd_t socket) noexcept
+void DirectorConfigServer::removePeer(posix::fd_t socket) noexcept
 {
   for(auto endpoint : m_endpoints)
     if(socket == endpoint.second)
       { m_endpoints.erase(endpoint.first); break; }
 }
 
-void ExecutorConfigServer::request(posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept
+void DirectorConfigServer::request(posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept
 {
   (void)addr;
   if(peerChooser(socket, cred))
@@ -268,7 +268,7 @@ void ExecutorConfigServer::request(posix::fd_t socket, posix::sockaddr_t addr, p
     rejectPeerRequest(socket);
 }
 
-void ExecutorConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept
+void DirectorConfigServer::receive(posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept
 {
   (void)fd;
   std::string config, key, value;

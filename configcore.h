@@ -7,7 +7,7 @@
 
 // project
 #include "configserver.h"
-#include "executorconfigserver.h"
+#include "directorconfigserver.h"
 
 class ConfigCore : public Object
 {
@@ -16,7 +16,7 @@ public:
 
 private:
   ConfigServer m_config_server;
-  ExecutorConfigServer m_executor_server;
+  DirectorConfigServer m_director_server;
 };
 
 #endif // CONFIGCORE_H

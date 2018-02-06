@@ -20,8 +20,8 @@
 #define CONFIG_IO_SOCKET        MCFS_PATH "/" CONFIG_USERNAME "/io"
 #endif
 
-#ifndef CONFIG_EXECUTOR_SOCKET
-#define CONFIG_EXECUTOR_SOCKET  MCFS_PATH "/" CONFIG_USERNAME "/executor"
+#ifndef CONFIG_DIRECTOR_SOCKET
+#define CONFIG_DIRECTOR_SOCKET  MCFS_PATH "/" CONFIG_USERNAME "/director"
 #endif
 
 ConfigCore::ConfigCore(void)
@@ -33,10 +33,10 @@ ConfigCore::ConfigCore(void)
   else
     posix::syslog << posix::priority::error << "Unable to bind Config daemon to " << CONFIG_IO_SOCKET << posix::eom;
 
-  if(m_executor_server.bind(CONFIG_EXECUTOR_SOCKET))
-    posix::syslog << posix::priority::info << "Config daemon bound to " << CONFIG_EXECUTOR_SOCKET << posix::eom;
-  else if(m_executor_server.bind(ANONYMOUS_SOCKET CONFIG_EXECUTOR_SOCKET))
-    posix::syslog << posix::priority::info << "Config daemon bound to anonymous socket " << CONFIG_EXECUTOR_SOCKET << posix::eom;
+  if(m_director_server.bind(CONFIG_DIRECTOR_SOCKET))
+    posix::syslog << posix::priority::info << "Config daemon bound to " << CONFIG_DIRECTOR_SOCKET << posix::eom;
+  else if(m_director_server.bind(ANONYMOUS_SOCKET CONFIG_DIRECTOR_SOCKET))
+    posix::syslog << posix::priority::info << "Config daemon bound to anonymous socket " << CONFIG_DIRECTOR_SOCKET << posix::eom;
   else
-    posix::syslog << posix::priority::error << "Unable to bind Config daemon to " << CONFIG_EXECUTOR_SOCKET << posix::eom;
+    posix::syslog << posix::priority::error << "Unable to bind Config daemon to " << CONFIG_DIRECTOR_SOCKET << posix::eom;
 }

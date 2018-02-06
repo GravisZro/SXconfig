@@ -49,8 +49,9 @@ PDTK = ../pdtk
 INCLUDEPATH += $$PDTK
 
 SOURCES = main.cpp \
+    configcore.cpp \
     configserver.cpp \
-    executorconfigserver.cpp \
+    directorconfigserver.cpp \
     $$PDTK/application.cpp \
     $$PDTK/socket.cpp \
     $$PDTK/asyncfd.cpp \
@@ -59,12 +60,12 @@ SOURCES = main.cpp \
     $$PDTK/specialized/peercred.cpp \
     $$PDTK/specialized/procstat.cpp \
     $$PDTK/specialized/PollEvent.cpp \
-    $$PDTK/specialized/FileEvent.cpp \
-    configcore.cpp
+    $$PDTK/specialized/FileEvent.cpp
 
 HEADERS = \
+    configcore.h \
     configserver.h \
-    executorconfigserver.h \
+    directorconfigserver.h \
     $$PDTK/application.h \
     $$PDTK/object.h \
     $$PDTK/socket.h \
@@ -79,5 +80,4 @@ HEADERS = \
     $$PDTK/cxxutils/syslogstream.h \
     $$PDTK/specialized/procstat.h \
     $$PDTK/specialized/PollEvent.h \
-    $$PDTK/specialized/FileEvent.h \
-    configcore.h
+    $$PDTK/specialized/FileEvent.h
