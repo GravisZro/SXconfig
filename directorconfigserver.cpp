@@ -23,9 +23,9 @@
 #define DIRECTOR_USERNAME     "director"
 #endif
 
-static const char* extract_daemon_name(const char* filename)
+static const char* extract_provider_name(const char* filename)
 {
-  char daemon[NAME_MAX];
+  char provider[NAME_MAX];
   const char* start = std::strrchr(filename, '/');
   const char* end   = std::strrchr(filename, '.');
 
@@ -34,7 +34,7 @@ static const char* extract_daemon_name(const char* filename)
      end < start || // occur in the incorrect order OR
      std::strcmp(end, ".conf")) // doesn't end with ".conf"
     return nullptr;
-  return std::strncpy(daemon, start + 1, posix::size_t(end - start + 1)); // extract daemon name
+  return std::strncpy(provider, start + 1, posix::size_t(end - start + 1)); // extract provider name
 }
 
 static const char* director_configfilename(const char* filename)
@@ -53,7 +53,11 @@ static bool readconfig(const char* name, std::string& buffer)
 
   if(file == nullptr)
   {
-    posix::syslog << posix::priority::warning << "Unable to open file: " << name << " : " << std::strerror(errno) << posix::eom;
+    posix::syslog << posix::priority::warning
+                  << "Unable to open file: %1 : %2"
+                  << name
+                  << std::strerror(errno)
+                  << posix::eom;
     return false;
   }
 
@@ -74,7 +78,7 @@ DirectorConfigServer::DirectorConfigServer(void) noexcept
   std::string buffer;
   DIR* dir = ::opendir(DIRECTOR_CONFIG_PATH);
   dirent* entry = nullptr;
-  const char* daemon = nullptr;
+  const char* provider = nullptr;
   const char* filename = nullptr;
   if(dir != nullptr)
   {
@@ -83,13 +87,13 @@ DirectorConfigServer::DirectorConfigServer(void) noexcept
       if(entry->d_name[0] == '.') // if dot files/dirs
         continue; // skip file
 
-      if((daemon   = extract_daemon_name    (entry->d_name)) == nullptr || // if daemon name extraction failed OR
+      if((provider   = extract_provider_name    (entry->d_name)) == nullptr || // if provider name extraction failed OR
          (filename = director_configfilename(entry->d_name)) == nullptr) // failed to build filename
         continue; // skip file
 
       if(readconfig(filename, buffer)) // able to read config file
       {
-        auto& conffile = m_configfiles[daemon];
+        auto& conffile = m_configfiles[provider];
         conffile.fevent = std::make_unique<FileEvent>(filename, FileEvent::WriteEvent);
         conffile.config.clear(); // erase any existing data
         conffile.config.importText(buffer);
@@ -114,11 +118,11 @@ DirectorConfigServer::~DirectorConfigServer(void) noexcept
 
 void DirectorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept
 {
-  const char* daemon = nullptr;
+  const char* provider = nullptr;
   if(flags.WriteEvent &&
-     (daemon = extract_daemon_name(filename)) != nullptr) // extracted daemon name
+     (provider = extract_provider_name(filename)) != nullptr) // extracted provider name
     for(auto& confpair : m_configfiles)
-      if(!std::strcmp(confpair.second.fevent->file(), daemon))
+      if(!std::strcmp(confpair.second.fevent->file(), provider))
       {
         std::string tmp_buffer;
         std::unordered_map<std::string, std::string> old_config, new_config;
@@ -148,7 +152,10 @@ void DirectorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t 
                 valueSet(endpoint.second, confpair.first, new_pair.first, new_pair.second); // invoke value update
         }
         else
-          posix::syslog << posix::priority::warning << "Failed to read/parse config file: " << filename << posix::eom;
+          posix::syslog << posix::priority::warning
+                        << "Failed to read/parse config file: %1"
+                        << filename
+                        << posix::eom;
       }
 }
 

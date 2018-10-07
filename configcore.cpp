@@ -54,7 +54,7 @@ ConfigCore::ConfigCore(void)
                   << posix::eom;
   else
     posix::syslog << posix::priority::error
-                  << "Unable to bind Config daemon to %1"
+                  << "Unable to bind Config provider to %1"
                   << CONFIG_DIRECTOR_SOCKET
                   << posix::eom;
 }

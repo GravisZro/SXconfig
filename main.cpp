@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) noexcept
       !posix::setuid(posix::getuserid (CONFIG_USERNAME)))) // unable to change user id
   {
     posix::syslog << posix::priority::critical
-                  << "daemon must be launched as username \"%1\" or have permissions to setuid/setgid"
+                  << "provider must be launched as username \"%1\" or have permissions to setuid/setgid"
                   << CONFIG_USERNAME
                   << posix::eom;
     std::exit(errno);

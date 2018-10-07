@@ -35,7 +35,11 @@ static bool readconfig(const char* name, std::string& buffer)
 
   if(file == nullptr)
   {
-    posix::syslog << posix::priority::warning << "Unable to open file: " << name << " : " << std::strerror(errno) << posix::eom;
+    posix::syslog << posix::priority::warning
+                  << "Unable to open file: %1 : %2"
+                  << name
+                  << std::strerror(errno)
+                  << posix::eom;
     return false;
   }
 
@@ -201,7 +205,10 @@ void ConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) n
               valueSet(socket, new_pair.first, new_pair.second); // invoke value update
         }
         else
-          posix::syslog << posix::priority::warning << "Failed to read/parse config file: " << filename << posix::eom;
+          posix::syslog << posix::priority::warning
+                        << "Failed to read/parse config file: %1"
+                        << filename
+                        << posix::eom;
       }
 }
 
