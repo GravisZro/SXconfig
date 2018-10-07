@@ -28,7 +28,9 @@
 
 void exiting(void)
 {
-  posix::syslog << posix::priority::notice << "daemon has exited." << posix::eom;
+  posix::syslog << posix::priority::notice
+                << "program has exited."
+                << posix::eom;
 }
 
 int main(int argc, char *argv[]) noexcept
@@ -38,7 +40,7 @@ int main(int argc, char *argv[]) noexcept
   std::atexit(exiting);
   std::signal(SIGPIPE, SIG_IGN); // needed for OSX
 
-  posix::syslog.open(CONFIG_APP_NAME, posix::facility::daemon);
+  posix::syslog.open(CONFIG_APP_NAME, posix::facility::provider);
 /*
   if((std::strcmp(posix::getgroupname(posix::getgid()), CONFIG_GROUPNAME) && // if current username is NOT what we want AND
       !posix::setgid(posix::getgroupid(CONFIG_GROUPNAME))) || // unable to change user id
@@ -46,9 +48,8 @@ int main(int argc, char *argv[]) noexcept
       !posix::setuid(posix::getuserid (CONFIG_USERNAME)))) // unable to change user id
   {
     posix::syslog << posix::priority::critical
-                  << "daemon must be launched as username "
-                  << '"' << CONFIG_USERNAME << '"'
-                  << " or have permissions to setuid/setgid"
+                  << "daemon must be launched as username \"%1\" or have permissions to setuid/setgid"
+                  << CONFIG_USERNAME
                   << posix::eom;
     std::exit(errno);
   }

@@ -27,16 +27,34 @@
 ConfigCore::ConfigCore(void)
 {
   if(m_config_server.bind(CONFIG_IO_SOCKET))
-    posix::syslog << posix::priority::info << "Config daemon bound to socket file " << CONFIG_IO_SOCKET << posix::eom;
+    posix::syslog << posix::priority::info
+                  << "Config provider bound to socket file %1"
+                  << CONFIG_IO_SOCKET
+                  << posix::eom;
   else if(m_config_server.bind(ANONYMOUS_SOCKET CONFIG_IO_SOCKET))
-    posix::syslog << posix::priority::info << "Config daemon bound to anonymous socket " << CONFIG_IO_SOCKET << posix::eom;
+    posix::syslog << posix::priority::info
+                  << "Config provider bound to anonymous socket %1"
+                  << CONFIG_IO_SOCKET
+                  << posix::eom;
   else
-    posix::syslog << posix::priority::error << "Unable to bind Config daemon to " << CONFIG_IO_SOCKET << posix::eom;
+    posix::syslog << posix::priority::error
+                  << "Unable to bind Config provider to %1"
+                  << CONFIG_IO_SOCKET
+                  << posix::eom;
 
   if(m_director_server.bind(CONFIG_DIRECTOR_SOCKET))
-    posix::syslog << posix::priority::info << "Config daemon bound to " << CONFIG_DIRECTOR_SOCKET << posix::eom;
+    posix::syslog << posix::priority::info
+                  << "Config provider bound to %1"
+                  << CONFIG_DIRECTOR_SOCKET
+                  << posix::eom;
   else if(m_director_server.bind(ANONYMOUS_SOCKET CONFIG_DIRECTOR_SOCKET))
-    posix::syslog << posix::priority::info << "Config daemon bound to anonymous socket " << CONFIG_DIRECTOR_SOCKET << posix::eom;
+    posix::syslog << posix::priority::info
+                  << "Config provider bound to anonymous socket %1"
+                  << CONFIG_DIRECTOR_SOCKET
+                  << posix::eom;
   else
-    posix::syslog << posix::priority::error << "Unable to bind Config daemon to " << CONFIG_DIRECTOR_SOCKET << posix::eom;
+    posix::syslog << posix::priority::error
+                  << "Unable to bind Config daemon to %1"
+                  << CONFIG_DIRECTOR_SOCKET
+                  << posix::eom;
 }
