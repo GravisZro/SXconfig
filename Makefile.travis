@@ -39,7 +39,9 @@ SOURCES       = main.cpp \
 		directorconfigserver.cpp \
 		$(PDTK)/application.cpp \
 		$(PDTK)/socket.cpp \
+		$(PDTK)/cxxutils/vfifo.cpp \
 		$(PDTK)/cxxutils/configmanip.cpp \
+		$(PDTK)/cxxutils/syslogstream.cpp \
 		$(PDTK)/specialized/eventbackend.cpp \
 		$(PDTK)/specialized/FileEvent.cpp \
 		$(PDTK)/specialized/PollEvent.cpp \
