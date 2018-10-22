@@ -29,8 +29,8 @@ static const char* extract_provider_name(const char* filename)
   const char* start = std::strrchr(filename, '/');
   const char* end   = std::strrchr(filename, '.');
 
-  if(start == nullptr || // if '/' NOT found OR
-     end   == nullptr || // '.' found AND
+  if(start == NULL || // if '/' NOT found OR
+     end   == NULL || // '.' found AND
      end < start || // occur in the incorrect order OR
      std::strcmp(end, ".conf")) // doesn't end with ".conf"
     return nullptr;
@@ -51,7 +51,7 @@ static bool readconfig(const char* name, std::string& buffer)
 {
   std::FILE* file = std::fopen(name, "a+b");
 
-  if(file == nullptr)
+  if(file == NULL)
   {
     posix::syslog << posix::priority::warning
                   << "Unable to open file: %1 : %2"
@@ -77,17 +77,17 @@ DirectorConfigServer::DirectorConfigServer(void) noexcept
 {
   std::string buffer;
   DIR* dir = ::opendir(DIRECTOR_CONFIG_PATH);
-  dirent* entry = nullptr;
+  dirent* entry = NULL;
   const char* provider = nullptr;
   const char* filename = nullptr;
-  if(dir != nullptr)
+  if(dir != NULL)
   {
-    while((entry = ::readdir(dir)) != nullptr)
+    while((entry = ::readdir(dir)) != NULL)
     {
       if(entry->d_name[0] == '.') // if dot files/dirs
         continue; // skip file
 
-      if((provider   = extract_provider_name    (entry->d_name)) == nullptr || // if provider name extraction failed OR
+      if((provider = extract_provider_name  (entry->d_name)) == nullptr || // if provider name extraction failed OR
          (filename = director_configfilename(entry->d_name)) == nullptr) // failed to build filename
         continue; // skip file
 

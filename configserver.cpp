@@ -33,7 +33,7 @@ static bool readconfig(const char* name, std::string& buffer)
 {
   std::FILE* file = std::fopen(name, "a+b");
 
-  if(file == nullptr)
+  if(file == NULL)
   {
     posix::syslog << posix::priority::warning
                   << "Unable to open file: %1 : %2"
