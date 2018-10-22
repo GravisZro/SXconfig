@@ -42,6 +42,8 @@ SOURCES       = main.cpp \
 		$(PDTK)/cxxutils/vfifo.cpp \
 		$(PDTK)/cxxutils/configmanip.cpp \
 		$(PDTK)/cxxutils/syslogstream.cpp \
+		$(PDTK)/cxxutils/mountpoint_helpers.cpp \
+		$(PDTK)/specialized/fstable.cpp \
 		$(PDTK)/specialized/eventbackend.cpp \
 		$(PDTK)/specialized/FileEvent.cpp \
 		$(PDTK)/specialized/PollEvent.cpp \
