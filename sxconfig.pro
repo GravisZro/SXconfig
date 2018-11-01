@@ -45,41 +45,41 @@ QMAKE_CXXFLAGS += -isystem /usr/include/c++/v1/
 #LIBS += -lclang-3.9
 #LIBS += -lrt
 
-PDTK = ../pdtk
-INCLUDEPATH += $$PDTK
+PUT = ../put
+INCLUDEPATH += $$PUT
 
 SOURCES = main.cpp \
     configcore.cpp \
     configserver.cpp \
     directorconfigserver.cpp \
-    $$PDTK/application.cpp \
-    $$PDTK/socket.cpp \
-    $$PDTK/asyncfd.cpp \
-    $$PDTK/cxxutils/vfifo.cpp \
-    $$PDTK/cxxutils/configmanip.cpp \
-    $$PDTK/cxxutils/syslogstream.cpp \
-    $$PDTK/specialized/eventbackend.cpp \
-    $$PDTK/specialized/peercred.cpp \
-    $$PDTK/specialized/procstat.cpp \
-    $$PDTK/specialized/PollEvent.cpp \
-    $$PDTK/specialized/FileEvent.cpp
+    $$PUT/application.cpp \
+    $$PUT/socket.cpp \
+    $$PUT/asyncfd.cpp \
+    $$PUT/cxxutils/vfifo.cpp \
+    $$PUT/cxxutils/configmanip.cpp \
+    $$PUT/cxxutils/syslogstream.cpp \
+    $$PUT/specialized/eventbackend.cpp \
+    $$PUT/specialized/peercred.cpp \
+    $$PUT/specialized/procstat.cpp \
+    $$PUT/specialized/PollEvent.cpp \
+    $$PUT/specialized/FileEvent.cpp
 
 HEADERS = \
     configcore.h \
     configserver.h \
     directorconfigserver.h \
-    $$PDTK/application.h \
-    $$PDTK/object.h \
-    $$PDTK/socket.h \
-    $$PDTK/asyncfd.h \
-    $$PDTK/cxxutils/vfifo.h \
-    $$PDTK/cxxutils/configmanip.h \
-    $$PDTK/cxxutils/syslogstream.h \
-    $$PDTK/cxxutils/posix_helpers.h \
-    $$PDTK/cxxutils/socket_helpers.h \
-    $$PDTK/cxxutils/error_helpers.h \
-    $$PDTK/specialized/eventbackend.h \
-    $$PDTK/specialized/peercred.h \
-    $$PDTK/specialized/procstat.h \
-    $$PDTK/specialized/PollEvent.h \
-    $$PDTK/specialized/FileEvent.h
+    $$PUT/application.h \
+    $$PUT/object.h \
+    $$PUT/socket.h \
+    $$PUT/asyncfd.h \
+    $$PUT/cxxutils/vfifo.h \
+    $$PUT/cxxutils/configmanip.h \
+    $$PUT/cxxutils/syslogstream.h \
+    $$PUT/cxxutils/posix_helpers.h \
+    $$PUT/cxxutils/socket_helpers.h \
+    $$PUT/cxxutils/error_helpers.h \
+    $$PUT/specialized/eventbackend.h \
+    $$PUT/specialized/peercred.h \
+    $$PUT/specialized/procstat.h \
+    $$PUT/specialized/PollEvent.h \
+    $$PUT/specialized/FileEvent.h
