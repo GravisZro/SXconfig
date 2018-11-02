@@ -37,18 +37,18 @@ SOURCES       = main.cpp \
 		configcore.cpp \
 		configserver.cpp \
 		directorconfigserver.cpp \
-    $(PUT)/application.cpp \
-    $(PUT)/socket.cpp \
-    $(PUT)/cxxutils/vfifo.cpp \
-    $(PUT)/cxxutils/configmanip.cpp \
-    $(PUT)/cxxutils/syslogstream.cpp \
-    $(PUT)/cxxutils/mountpoint_helpers.cpp \
-    $(PUT)/specialized/fstable.cpp \
-    $(PUT)/specialized/eventbackend.cpp \
-    $(PUT)/specialized/FileEvent.cpp \
-    $(PUT)/specialized/PollEvent.cpp \
-    $(PUT)/specialized/peercred.cpp \
-    $(PUT)/specialized/procstat.cpp
+		$(PUT)/application.cpp \
+		$(PUT)/socket.cpp \
+		$(PUT)/cxxutils/vfifo.cpp \
+		$(PUT)/cxxutils/configmanip.cpp \
+		$(PUT)/cxxutils/syslogstream.cpp \
+		$(PUT)/cxxutils/mountpoint_helpers.cpp \
+		$(PUT)/specialized/fstable.cpp \
+		$(PUT)/specialized/eventbackend.cpp \
+		$(PUT)/specialized/FileEvent.cpp \
+		$(PUT)/specialized/PollEvent.cpp \
+		$(PUT)/specialized/peercred.cpp \
+		$(PUT)/specialized/procstat.cpp
 
 OBJS := $(SOURCES:.s=.o)
 OBJS := $(OBJS:.c=.o)
@@ -69,8 +69,8 @@ $(TARGET): OUTPUT_DIR $(OBJS)
 	$(QUIET) $(CXX) -o $@ $(OBJS) $(LDFLAGS)
 
 OUTPUT_DIR:
-  $(QUIET) mkdir -p $(BUILD_PATH)/$(PUT)/cxxutils
-  $(QUIET) mkdir -p $(BUILD_PATH)/$(PUT)/specialized
+	$(QUIET) mkdir -p $(BUILD_PATH)/$(PUT)/cxxutils
+	$(QUIET) mkdir -p $(BUILD_PATH)/$(PUT)/specialized
 
 clean:
 	$(QUIET) rm -f $(TARGET)
