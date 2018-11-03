@@ -27,9 +27,9 @@ ifndef BUILD_PATH
 endif
 
 PUT           = ./put
-INCPATH       = -I. -I$(PUT)
-CFLAGS        = -pipe -g -Wall -W -fPIC $(DEFINES) $(INCPATH)
-CXXFLAGS      = -pipe -std=c++14 -Os -fno-exceptions -fno-rtti -fno-threadsafe-statics -g -Wall -W -fPIC $(DEFINES) $(INCPATH)
+INCPATH       = -I$(PUT)
+CFLAGS        = -pipe -g -Os -Wall -W -fPIC $(DEFINES) $(INCPATH)
+CXXFLAGS      = $(CFLAGS) -fno-exceptions -fno-rtti
 LDFLAGS       = 
 
 TARGET        = sxconfig
@@ -44,12 +44,12 @@ SOURCES       = main.cpp \
 		$(PUT)/cxxutils/configmanip.cpp \
 		$(PUT)/cxxutils/syslogstream.cpp \
 		$(PUT)/cxxutils/mountpoint_helpers.cpp \
-		$(PUT)/specialized/fstable.cpp \
 		$(PUT)/specialized/eventbackend.cpp \
+		$(PUT)/specialized/fstable.cpp \
+		$(PUT)/specialized/procstat.cpp
+		$(PUT)/specialized/peercred.cpp \
 		$(PUT)/specialized/FileEvent.cpp \
 		$(PUT)/specialized/PollEvent.cpp \
-		$(PUT)/specialized/peercred.cpp \
-		$(PUT)/specialized/procstat.cpp
 
 OBJS := $(SOURCES:.s=.o)
 OBJS := $(OBJS:.c=.o)
