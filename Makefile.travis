@@ -46,7 +46,7 @@ SOURCES       = main.cpp \
 		$(PUT)/cxxutils/mountpoint_helpers.cpp \
 		$(PUT)/specialized/eventbackend.cpp \
 		$(PUT)/specialized/fstable.cpp \
-		$(PUT)/specialized/procstat.cpp
+		$(PUT)/specialized/procstat.cpp \
 		$(PUT)/specialized/peercred.cpp \
 		$(PUT)/specialized/FileEvent.cpp \
 		$(PUT)/specialized/PollEvent.cpp
