@@ -39,6 +39,7 @@ SOURCES       = main.cpp \
 		directorconfigserver.cpp \
 		$(PUT)/application.cpp \
 		$(PUT)/socket.cpp \
+		$(PUT)/cxxutils/mutex.cpp \
 		$(PUT)/cxxutils/vfifo.cpp \
 		$(PUT)/cxxutils/configmanip.cpp \
 		$(PUT)/cxxutils/syslogstream.cpp \
