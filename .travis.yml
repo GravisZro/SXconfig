@@ -74,5 +74,7 @@ matrix:
       env:
         - COMPILER=clang++
 
+git:
+  submodules: true
 script:
   - make -e CXX=$COMPILER -e VERBOSE=true -f Makefile.travis
