@@ -49,7 +49,7 @@ SOURCES       = main.cpp \
 		$(PUT)/specialized/procstat.cpp
 		$(PUT)/specialized/peercred.cpp \
 		$(PUT)/specialized/FileEvent.cpp \
-		$(PUT)/specialized/PollEvent.cpp \
+		$(PUT)/specialized/PollEvent.cpp
 
 OBJS := $(SOURCES:.s=.o)
 OBJS := $(OBJS:.c=.o)
