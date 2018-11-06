@@ -39,12 +39,12 @@ SOURCES       = main.cpp \
 		directorconfigserver.cpp \
 		$(PUT)/application.cpp \
 		$(PUT)/socket.cpp \
-		$(PUT)/cxxutils/mutex.cpp \
 		$(PUT)/cxxutils/vfifo.cpp \
 		$(PUT)/cxxutils/configmanip.cpp \
 		$(PUT)/cxxutils/syslogstream.cpp \
 		$(PUT)/cxxutils/mountpoint_helpers.cpp \
 		$(PUT)/specialized/eventbackend.cpp \
+		$(PUT)/specialized/mutex.cpp \
 		$(PUT)/specialized/fstable.cpp \
 		$(PUT)/specialized/procstat.cpp \
 		$(PUT)/specialized/peercred.cpp \

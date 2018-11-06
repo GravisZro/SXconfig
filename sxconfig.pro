@@ -77,11 +77,11 @@ SOURCES = main.cpp \
     $$PUT/application.cpp \
     $$PUT/socket.cpp \
     $$PUT/asyncfd.cpp \
-    $$PUT/cxxutils/mutex.cpp \
     $$PUT/cxxutils/vfifo.cpp \
     $$PUT/cxxutils/configmanip.cpp \
     $$PUT/cxxutils/syslogstream.cpp \
     $$PUT/specialized/eventbackend.cpp \
+    $$PUT/specialized/mutex.cpp \
     $$PUT/specialized/peercred.cpp \
     $$PUT/specialized/procstat.cpp \
     $$PUT/specialized/PollEvent.cpp \
@@ -95,14 +95,15 @@ HEADERS = \
     $$PUT/object.h \
     $$PUT/socket.h \
     $$PUT/asyncfd.h \
-    $$PUT/cxxutils/mutex.h \
     $$PUT/cxxutils/vfifo.h \
     $$PUT/cxxutils/configmanip.h \
     $$PUT/cxxutils/syslogstream.h \
     $$PUT/cxxutils/posix_helpers.h \
     $$PUT/cxxutils/socket_helpers.h \
     $$PUT/cxxutils/error_helpers.h \
+    $$PUT/specialized/osdetect.h \
     $$PUT/specialized/eventbackend.h \
+    $$PUT/specialized/mutex.h \
     $$PUT/specialized/peercred.h \
     $$PUT/specialized/procstat.h \
     $$PUT/specialized/PollEvent.h \
