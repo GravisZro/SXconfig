@@ -29,9 +29,9 @@ static const char* configfilename(const char* base)
   return name;
 }
 
-static bool readconfig(const char* name, std::string& buffer)
+static bool readconfig(const std::string& name, std::string& buffer)
 {
-  std::FILE* file = std::fopen(name, "a+b");
+  std::FILE* file = std::fopen(name.c_str(), "a+b");
 
   if(file == NULL)
   {
@@ -171,12 +171,12 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
   return false; // reject multiple connections from one endpoint
 }
 
-void ConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept
+void ConfigServer::fileUpdated(std::string filename, FileEvent::Flags_t flags) noexcept
 {
   posix::fd_t socket = posix::invalid_descriptor;
   if(flags.WriteEvent)
     for(auto& confpair : m_configfiles)
-      if(!std::strcmp(confpair.second.fevent->file(), filename))
+      if(confpair.second.fevent->file() == filename)
       {
         std::string tmp_buffer;
         std::unordered_map<std::string, std::string> old_config, new_config;

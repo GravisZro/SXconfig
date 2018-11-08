@@ -22,7 +22,18 @@
 #ifndef DIRECTOR_USERNAME
 #define DIRECTOR_USERNAME     "director"
 #endif
+/*
+static std::string extract_provider_name(const std::string& filename)
+{
+  posix::size_t start = filename.rfind('/');
+  posix::size_t end   = filename.rfind('.');
 
+  if(start == std::string::npos ||
+     end   == std::string::npos)
+    return std::string();
+  return filename.substr(start, end - start);
+}
+*/
 static const char* extract_provider_name(const char* filename)
 {
   char provider[NAME_MAX];
@@ -116,13 +127,13 @@ DirectorConfigServer::~DirectorConfigServer(void) noexcept
 {
 }
 
-void DirectorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept
+void DirectorConfigServer::fileUpdated(std::string filename, FileEvent::Flags_t flags) noexcept
 {
   const char* provider = nullptr;
   if(flags.WriteEvent &&
-     (provider = extract_provider_name(filename)) != nullptr) // extracted provider name
+     (provider = extract_provider_name(filename.c_str())) != nullptr) // extracted provider name
     for(auto& confpair : m_configfiles)
-      if(!std::strcmp(confpair.second.fevent->file(), provider))
+      if(confpair.second.fevent->file() == provider)
       {
         std::string tmp_buffer;
         std::unordered_map<std::string, std::string> old_config, new_config;
@@ -130,7 +141,7 @@ void DirectorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t 
         confpair.second.config.exportKeyPairs(old_config); // export data
         confpair.second.config.clear(); // wipe config
 
-        if(readconfig(filename, tmp_buffer) &&
+        if(readconfig(filename.c_str(), tmp_buffer) &&
            confpair.second.config.importText(tmp_buffer))
         {
           confpair.second.config.exportKeyPairs(new_config);
@@ -159,9 +170,9 @@ void DirectorConfigServer::fileUpdated(const char* filename, FileEvent::Flags_t 
       }
 }
 
-void DirectorConfigServer::dirUpdated(const char* dirname, FileEvent::Flags_t flags) noexcept
+void DirectorConfigServer::dirUpdated(std::string dirname, FileEvent::Flags_t flags) noexcept
 {
-  std::printf("dir updated: %s - 0x%02x\n", dirname, uint8_t(flags));
+  std::printf("dir updated: %s - 0x%02x\n", dirname.c_str(), uint8_t(flags));
 }
 
 void DirectorConfigServer::listConfigsCall(posix::fd_t socket) noexcept

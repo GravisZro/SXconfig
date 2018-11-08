@@ -44,8 +44,8 @@ private:
   void receive          (posix::fd_t socket, vfifo buffer, posix::fd_t fd) noexcept;
   void request          (posix::fd_t socket, posix::sockaddr_t addr, proccred_t cred) noexcept;
 
-  void fileUpdated(const char* filename, FileEvent::Flags_t flags) noexcept;
-  void dirUpdated (const char* dirname , FileEvent::Flags_t flags) noexcept;
+  void fileUpdated(std::string filename, FileEvent::Flags_t flags) noexcept;
+  void dirUpdated (std::string dirname , FileEvent::Flags_t flags) noexcept;
 
   struct configfile_t
   {

@@ -80,10 +80,12 @@ SOURCES = main.cpp \
     $$PUT/cxxutils/vfifo.cpp \
     $$PUT/cxxutils/configmanip.cpp \
     $$PUT/cxxutils/syslogstream.cpp \
+    $$PUT/cxxutils/mountpoint_helpers.cpp \
     $$PUT/specialized/eventbackend.cpp \
     $$PUT/specialized/mutex.cpp \
     $$PUT/specialized/peercred.cpp \
     $$PUT/specialized/procstat.cpp \
+    $$PUT/specialized/fstable.cpp \
     $$PUT/specialized/PollEvent.cpp \
     $$PUT/specialized/FileEvent.cpp
 
@@ -101,10 +103,12 @@ HEADERS = \
     $$PUT/cxxutils/posix_helpers.h \
     $$PUT/cxxutils/socket_helpers.h \
     $$PUT/cxxutils/error_helpers.h \
+    $$PUT/cxxutils/mountpoint_helpers.h \
     $$PUT/specialized/osdetect.h \
     $$PUT/specialized/eventbackend.h \
     $$PUT/specialized/mutex.h \
     $$PUT/specialized/peercred.h \
     $$PUT/specialized/procstat.h \
+    $$PUT/specialized/fstable.h \
     $$PUT/specialized/PollEvent.h \
     $$PUT/specialized/FileEvent.h
