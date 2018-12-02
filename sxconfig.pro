@@ -86,8 +86,8 @@ SOURCES = main.cpp \
     $$PUT/specialized/procstat.cpp \
     $$PUT/specialized/fstable.cpp \
     $$PUT/specialized/mountpoints.cpp \
-    $$PUT/specialized/PollEvent.cpp \
-    $$PUT/specialized/FileEvent.cpp
+    $$PUT/specialized/pollevent.cpp \
+    $$PUT/specialized/fileevent.cpp
 
 HEADERS = \
     configcore.h \
@@ -110,5 +110,5 @@ HEADERS = \
     $$PUT/specialized/procstat.h \
     $$PUT/specialized/fstable.h \
     $$PUT/specialized/mountpoints.h \
-    $$PUT/specialized/PollEvent.h \
-    $$PUT/specialized/FileEvent.h
+    $$PUT/specialized/pollevent.h \
+    $$PUT/specialized/fileevent.h
