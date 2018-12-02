@@ -13,7 +13,7 @@
 #include <cxxutils/vfifo.h>
 #include <cxxutils/hashing.h>
 #include <cxxutils/configmanip.h>
-#include <specialized/FileEvent.h>
+#include <specialized/fileevent.h>
 
 class DirectorConfigServer : public ServerSocket
 {
