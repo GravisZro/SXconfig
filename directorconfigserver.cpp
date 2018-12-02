@@ -12,8 +12,6 @@
 
 // PDTK
 #include <cxxutils/syslogstream.h>
-#include <specialized/procstat.h>
-
 
 #ifndef DIRECTOR_CONFIG_PATH
 #define DIRECTOR_CONFIG_PATH  "/etc/director"
