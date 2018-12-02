@@ -48,8 +48,8 @@ SOURCES       = main.cpp \
 		$(PUT)/specialized/procstat.cpp \
 		$(PUT)/specialized/fstable.cpp \
 		$(PUT)/specialized/mountpoints.cpp \
-		$(PUT)/specialized/FileEvent.cpp \
-		$(PUT)/specialized/PollEvent.cpp
+		$(PUT)/specialized/fileevent.cpp \
+		$(PUT)/specialized/pollevent.cpp
 
 OBJS := $(SOURCES:.s=.o)
 OBJS := $(OBJS:.c=.o)
