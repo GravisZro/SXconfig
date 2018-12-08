@@ -1,9 +1,5 @@
 #include "configserver.h"
 
-// POSIX++
-#include <cstdio>
-#include <climits>
-
 // STL
 #include <algorithm>
 
@@ -23,22 +19,22 @@ static const char* configfilename(const char* base)
 {
   // construct config filename
   static char name[PATH_MAX];
-  std::memset(name, 0, PATH_MAX);
-  if(std::snprintf(name, PATH_MAX, "%s/%s.conf", CONFIG_CONFIG_PATH, base) == posix::error_response) // I don't how this could fail
+  posix::memset(name, 0, PATH_MAX);
+  if(posix::snprintf(name, PATH_MAX, "%s/%s.conf", CONFIG_CONFIG_PATH, base) == posix::error_response) // I don't how this could fail
     return nullptr; // unable to build config filename
   return name;
 }
 
 static bool readconfig(const std::string& name, std::string& buffer)
 {
-  std::FILE* file = std::fopen(name.c_str(), "a+b");
+  posix::FILE* file = posix::fopen(name.c_str(), "a+b");
 
   if(file == NULL)
   {
     posix::syslog << posix::priority::warning
                   << "Unable to open file: %1 : %2"
                   << name
-                  << std::strerror(errno)
+                  << posix::strerror(errno)
                   << posix::eom;
     return false;
   }
@@ -144,7 +140,7 @@ bool ConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexc
     return false;
 
   process_state_t state;
-  if(::procstat(cred.pid, state) == posix::error_response) // get state information about the connecting process
+  if(!procstat(cred.pid, state)) // get state information about the connecting process
     return false; // unable to get state
 
   auto endpoint = m_endpoints.find(cred.pid);

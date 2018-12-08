@@ -3,10 +3,6 @@
 // POSIX
 #include <dirent.h>
 
-// POSIX++
-#include <cstdio>
-#include <climits>
-
 // STL
 #include <algorithm>
 
@@ -35,37 +31,37 @@ static std::string extract_provider_name(const std::string& filename)
 static const char* extract_provider_name(const char* filename)
 {
   char provider[NAME_MAX];
-  const char* start = std::strrchr(filename, '/');
-  const char* end   = std::strrchr(filename, '.');
+  const char* start = posix::strrchr(filename, '/');
+  const char* end   = posix::strrchr(filename, '.');
 
   if(start == NULL || // if '/' NOT found OR
      end   == NULL || // '.' found AND
      end < start || // occur in the incorrect order OR
-     std::strcmp(end, ".conf")) // doesn't end with ".conf"
+     posix::strcmp(end, ".conf")) // doesn't end with ".conf"
     return nullptr;
-  return std::strncpy(provider, start + 1, posix::size_t(end - start + 1)); // extract provider name
+  return posix::strncpy(provider, start + 1, posix::size_t(end - start + 1)); // extract provider name
 }
 
 static const char* director_configfilename(const char* filename)
 {
   // construct config filename
   static char fullpath[PATH_MAX];
-  std::memset(fullpath, 0, PATH_MAX);
-  if(std::snprintf(fullpath, PATH_MAX, "%s/%s", DIRECTOR_CONFIG_PATH, filename) == posix::error_response) // I don't how this could fail
+  posix::memset(fullpath, 0, PATH_MAX);
+  if(posix::snprintf(fullpath, PATH_MAX, "%s/%s", DIRECTOR_CONFIG_PATH, filename) == posix::error_response) // I don't how this could fail
     return nullptr; // unable to build config filename
   return fullpath;
 }
 
 static bool readconfig(const char* name, std::string& buffer)
 {
-  std::FILE* file = std::fopen(name, "a+b");
+  posix::FILE* file = posix::fopen(name, "a+b");
 
   if(file == NULL)
   {
     posix::syslog << posix::priority::warning
                   << "Unable to open file: %1 : %2"
                   << name
-                  << std::strerror(errno)
+                  << posix::strerror(errno)
                   << posix::eom;
     return false;
   }
@@ -255,7 +251,7 @@ void DirectorConfigServer::unsetCall(posix::fd_t socket, const std::string& conf
 
 bool DirectorConfigServer::peerChooser(posix::fd_t socket, const proccred_t& cred) noexcept
 {
-  if(std::strcmp(DIRECTOR_USERNAME, posix::getusername(cred.uid))) // username must be "director"
+  if(posix::strcmp(DIRECTOR_USERNAME, posix::getusername(cred.uid))) // username must be "director"
     return false; // didn't match, reject connection
 
   auto endpoint = m_endpoints.find(cred.pid);

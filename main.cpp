@@ -1,13 +1,7 @@
-// POSIX
-#include <unistd.h>
-
-// POSIX++
-#include <cstdlib>
-#include <csignal>
-
 // PDTK
 #include <application.h>
 #include <object.h>
+#include <cxxutils/posix_helpers.h>
 #include <cxxutils/syslogstream.h>
 
 // Project
@@ -37,21 +31,21 @@ int main(int argc, char *argv[]) noexcept
 {
   (void)argc;
   (void)argv;
-  std::atexit(exiting);
-  std::signal(SIGPIPE, SIG_IGN); // needed for OSX
+  posix::atexit(exiting);
+  posix::signal(SIGPIPE, SIG_IGN); // needed for OSX
 
   posix::syslog.open(CONFIG_APP_NAME, posix::facility::provider);
 /*
-  if((std::strcmp(posix::getgroupname(posix::getgid()), CONFIG_GROUPNAME) && // if current username is NOT what we want AND
+  if((posix::strcmp(posix::getgroupname(posix::getgid()), CONFIG_GROUPNAME) && // if current username is NOT what we want AND
       !posix::setgid(posix::getgroupid(CONFIG_GROUPNAME))) || // unable to change user id
-     (std::strcmp(posix::getusername(posix::getuid()), CONFIG_USERNAME) && // if current username is NOT what we want AND
+     (posix::strcmp(posix::getusername(posix::getuid()), CONFIG_USERNAME) && // if current username is NOT what we want AND
       !posix::setuid(posix::getuserid (CONFIG_USERNAME)))) // unable to change user id
   {
     posix::syslog << posix::priority::critical
                   << "provider must be launched as username \"%1\" or have permissions to setuid/setgid"
                   << CONFIG_USERNAME
                   << posix::eom;
-    std::exit(errno);
+    posix::exit(errno);
   }
 */
   Application app;

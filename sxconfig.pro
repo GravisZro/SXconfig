@@ -76,7 +76,6 @@ SOURCES = main.cpp \
     directorconfigserver.cpp \
     $$PUT/application.cpp \
     $$PUT/socket.cpp \
-    $$PUT/asyncfd.cpp \
     $$PUT/cxxutils/vfifo.cpp \
     $$PUT/cxxutils/configmanip.cpp \
     $$PUT/cxxutils/syslogstream.cpp \
@@ -96,7 +95,6 @@ HEADERS = \
     $$PUT/application.h \
     $$PUT/object.h \
     $$PUT/socket.h \
-    $$PUT/asyncfd.h \
     $$PUT/cxxutils/vfifo.h \
     $$PUT/cxxutils/configmanip.h \
     $$PUT/cxxutils/syslogstream.h \
