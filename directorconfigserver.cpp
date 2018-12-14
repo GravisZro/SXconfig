@@ -196,7 +196,7 @@ void DirectorConfigServer::setCall(posix::fd_t socket, const std::string& config
 
   auto configfile = m_configfiles.find(config);
   if(configfile == m_configfiles.end())
-    errcode = posix::error_t(std::errc::invalid_argument); // not a valid config file name
+    errcode = posix::error_t(posix::errc::invalid_argument); // not a valid config file name
   else
     configfile->second.config.getNode(key)->value = value;
 
@@ -211,12 +211,12 @@ void DirectorConfigServer::getCall(posix::fd_t socket, const std::string& config
 
   auto configfile = m_configfiles.find(config); // look up config by name
   if(configfile == m_configfiles.end()) // if not found
-    errcode = posix::error_t(std::errc::invalid_argument); // not a valid config file name
+    errcode = posix::error_t(posix::errc::invalid_argument); // not a valid config file name
   else
   {
     auto node = configfile->second.config.findNode(key); // find node in config file
     if(node == nullptr)
-      errcode = posix::error_t(std::errc::invalid_argument); // doesn't exist
+      errcode = posix::error_t(posix::errc::invalid_argument); // doesn't exist
     else
     {
       switch(node->type)
@@ -242,9 +242,9 @@ void DirectorConfigServer::unsetCall(posix::fd_t socket, const std::string& conf
   auto configfile = m_configfiles.find(config); // look up config by name
 
   if(configfile == m_configfiles.end())
-    errcode = posix::error_t(std::errc::io_error); // no such config file!
+    errcode = posix::error_t(posix::errc::io_error); // no such config file!
   else if(!configfile->second.config.deleteNode(key))
-    errcode = posix::error_t(std::errc::invalid_argument); // doesn't exist
+    errcode = posix::error_t(posix::errc::invalid_argument); // doesn't exist
 
   unsetReturn(socket, errcode, config, key);
 }

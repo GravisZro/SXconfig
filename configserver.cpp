@@ -67,7 +67,7 @@ void ConfigServer::setCall(posix::fd_t socket, const std::string& key, const std
   posix::error_t errcode = posix::success_response;
   auto configfile = m_configfiles.find(socket);
   if(configfile == m_configfiles.end())
-    errcode = posix::error_t(std::errc::io_error); // not a valid key!
+    errcode = posix::error_t(posix::errc::io_error); // not a valid key!
   else
     configfile->second.config.getNode(key)->value = value;
   setReturn(socket, errcode, key);
@@ -82,12 +82,12 @@ void ConfigServer::getCall(posix::fd_t socket, const std::string& key) noexcept
   auto configfile = m_configfiles.find(socket);
 
   if(configfile != m_configfiles.end())
-    errcode = posix::error_t(std::errc::io_error); // no config file for socket
+    errcode = posix::error_t(posix::errc::io_error); // no config file for socket
   else
   {
     auto node = configfile->second.config.findNode(key);
     if(node == nullptr)
-      errcode = posix::error_t(std::errc::invalid_argument); // node doesn't exist
+      errcode = posix::error_t(posix::errc::invalid_argument); // node doesn't exist
     else
     {
       switch(node->type)
@@ -113,9 +113,9 @@ void ConfigServer::unsetCall(posix::fd_t socket, const std::string& key) noexcep
   auto configfile = m_configfiles.find(socket);
 
   if(configfile == m_configfiles.end())
-    errcode = posix::error_t(std::errc::io_error); // no such config file!
+    errcode = posix::error_t(posix::errc::io_error); // no such config file!
   else if(!configfile->second.config.deleteNode(key))
-    errcode = posix::error_t(std::errc::invalid_argument); // doesn't exist
+    errcode = posix::error_t(posix::errc::invalid_argument); // doesn't exist
 
   unsetReturn(socket, errcode, key);
 }
