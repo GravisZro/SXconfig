@@ -40,13 +40,13 @@ static bool readconfig(const std::string& name, std::string& buffer)
   }
 
   buffer.clear();
-  buffer.resize(posix::size_t(std::ftell(file)), '\n');
+  buffer.resize(posix::size_t(posix::ftell(file)), '\n');
   if(buffer.size())
   {
-    std::rewind(file);
-    std::fread(const_cast<char*>(buffer.data()), sizeof(std::string::value_type), buffer.size(), file);
+    posix::rewind(file);
+    posix::fread(const_cast<char*>(buffer.data()), sizeof(std::string::value_type), buffer.size(), file);
   }
-  std::fclose(file);
+  posix::fclose(file);
   return true;
 }
 

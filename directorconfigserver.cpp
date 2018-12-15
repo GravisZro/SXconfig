@@ -67,13 +67,13 @@ static bool readconfig(const char* name, std::string& buffer)
   }
 
   buffer.clear();
-  buffer.resize(posix::size_t(std::ftell(file)), '\n');
+  buffer.resize(posix::size_t(posix::ftell(file)), '\n');
   if(buffer.size())
   {
-    std::rewind(file);
-    std::fread(const_cast<char*>(buffer.data()), sizeof(std::string::value_type), buffer.size(), file);
+    posix::rewind(file);
+    posix::fread(const_cast<char*>(buffer.data()), sizeof(std::string::value_type), buffer.size(), file);
   }
-  std::fclose(file);
+  posix::fclose(file);
   return true;
 }
 
@@ -166,7 +166,7 @@ void DirectorConfigServer::fileUpdated(std::string filename, FileEvent::Flags_t 
 
 void DirectorConfigServer::dirUpdated(std::string dirname, FileEvent::Flags_t flags) noexcept
 {
-  std::printf("dir updated: %s - 0x%02x\n", dirname.c_str(), uint8_t(flags));
+  posix::printf("dir updated: %s - 0x%02x\n", dirname.c_str(), uint8_t(flags));
 }
 
 void DirectorConfigServer::listConfigsCall(posix::fd_t socket) noexcept
