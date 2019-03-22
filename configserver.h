@@ -65,7 +65,7 @@ inline bool ConfigServer::unsetReturn(const posix::fd_t socket, const posix::err
 inline bool ConfigServer::setReturn(const posix::fd_t socket, const posix::error_t errcode, const std::string& key) const noexcept
   { return write(socket, vfifo("RPC", "setReturn", errcode, key), posix::invalid_descriptor); }
 
-inline bool ConfigServer::getReturn(const posix::fd_t socket, const posix::error_t errcode, const std::string& key,
+inline bool ConfigServer::getReturn(const posix::fd_t socket, const posix::error_t errcode, const std::string& /*key*/,
                                     const std::string& value, const std::list<std::string>& children) const noexcept
   { return write(socket, vfifo("RPC", "getReturn", errcode, value, children), posix::invalid_descriptor); }
 
