@@ -1,9 +1,9 @@
 #ifndef CONFIGCORE_H
 #define CONFIGCORE_H
 
-// PDTK
-#include <object.h>
-#include <cxxutils/configmanip.h>
+// PUT
+#include <put/object.h>
+#include <put/cxxutils/configmanip.h>
 
 // project
 #include "configserver.h"

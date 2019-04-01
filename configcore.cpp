@@ -1,8 +1,8 @@
 #include "configcore.h"
 
-// PDTK
-#include <cxxutils/syslogstream.h>
-#include <specialized/mountpoints.h>
+// PUT
+#include <put/cxxutils/syslogstream.h>
+#include <put/specialized/mountpoints.h>
 
 #ifndef CONFIG_USERNAME
 #define CONFIG_USERNAME         "config"

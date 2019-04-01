@@ -3,9 +3,9 @@
 // STL
 #include <algorithm>
 
-// PDTK
-#include <cxxutils/syslogstream.h>
-#include <specialized/procstat.h>
+// PUT
+#include <put/cxxutils/syslogstream.h>
+#include <put/specialized/procstat.h>
 
 #ifndef CONFIG_CONFIG_PATH
 #define CONFIG_CONFIG_PATH    "/etc/config"

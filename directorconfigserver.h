@@ -7,13 +7,13 @@
 #include <string>
 #include <unordered_map>
 
-// PDTK
-#include <socket.h>
-#include <cxxutils/posix_helpers.h>
-#include <cxxutils/vfifo.h>
-#include <cxxutils/hashing.h>
-#include <cxxutils/configmanip.h>
-#include <specialized/fileevent.h>
+// PUT
+#include <put/socket.h>
+#include <put/cxxutils/posix_helpers.h>
+#include <put/cxxutils/vfifo.h>
+#include <put/cxxutils/hashing.h>
+#include <put/cxxutils/configmanip.h>
+#include <put/specialized/fileevent.h>
 
 class DirectorConfigServer : public ServerSocket
 {

@@ -6,8 +6,8 @@
 // STL
 #include <algorithm>
 
-// PDTK
-#include <cxxutils/syslogstream.h>
+// PUT
+#include <put/cxxutils/syslogstream.h>
 
 #ifndef DIRECTOR_CONFIG_PATH
 #define DIRECTOR_CONFIG_PATH  "/etc/director"
